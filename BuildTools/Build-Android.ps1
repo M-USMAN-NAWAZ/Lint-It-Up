@@ -87,7 +87,12 @@ function Sync-BuildAgentRepo {
         throw "git reset failed"
     }
 
-    git -C $AgentRepoPath clean -fd
+    git -C $AgentRepoPath clean -fd `
+      -e Library `
+      -e Temp `
+      -e UserSettings `
+      -e Builds `
+      -e Logs
     if ($LASTEXITCODE -ne 0) {
         throw "git clean failed"
     }
