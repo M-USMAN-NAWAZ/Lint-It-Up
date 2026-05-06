@@ -74,6 +74,28 @@ function Remove-StaleUnityLocks {
     }
 }
 
+function Stop-BuildAgentUnityProcesses {
+    param([string]$ProjectPath)
+
+    try {
+        $unityProcesses = Get-CimInstance Win32_Process -Filter "Name = 'Unity.exe'" |
+            Where-Object { $_.CommandLine -like "*$ProjectPath*" }
+    }
+    catch {
+        Write-Host "Could not inspect Unity processes. Continuing with lock cleanup."
+        return
+    }
+
+    foreach ($process in $unityProcesses) {
+        Write-Host "Stopping stuck Unity build process: $($process.ProcessId)"
+        Stop-Process -Id $process.ProcessId -Force
+    }
+
+    if ($unityProcesses) {
+        Start-Sleep -Seconds 2
+    }
+}
+
 function Sync-BuildAgentRepo {
     param(
         [string]$SourceRepoPath,
@@ -126,7 +148,8 @@ function Invoke-UnityAndroidBuild {
     param(
         [string]$UnityExePath,
         [string]$ProjectPath,
-        [string]$LogPath
+        [string]$LogPath,
+        [string]$ApkOutputPath
     )
 
     & $UnityExePath `
@@ -137,6 +160,7 @@ function Invoke-UnityAndroidBuild {
       -buildTarget Android `
       -projectPath $ProjectPath `
       -executeMethod BuildScript.BuildAndroid `
+      -androidOutputPath $ApkOutputPath `
       -logFile $LogPath
 
     return $LASTEXITCODE
@@ -154,13 +178,16 @@ New-Item -ItemType Directory -Force -Path $FinalOutputDirectory | Out-Null
 Sync-BuildAgentRepo -SourceRepoPath $projectRoot -AgentRepoPath $agentRepoPath -BranchName $Branch
 
 $unityPath = Get-UnityEditorPath -ProjectPath $agentRepoPath
+Stop-BuildAgentUnityProcesses -ProjectPath $agentRepoPath
 Remove-StaleUnityLocks -ProjectPath $agentRepoPath
 
 Write-Host "Unity path: $unityPath"
 Write-Host "Build repo:  $agentRepoPath"
 Write-Host "Log file:    $logFile"
 
-$buildExitCode = Invoke-UnityAndroidBuild -UnityExePath $unityPath -ProjectPath $agentRepoPath -LogPath $logFile
+$finalApkPath = Join-Path $FinalOutputDirectory "Lint-It-Up.apk"
+
+$buildExitCode = Invoke-UnityAndroidBuild -UnityExePath $unityPath -ProjectPath $agentRepoPath -LogPath $logFile -ApkOutputPath $finalApkPath
 if ($buildExitCode -ne 0) {
     Write-Host ""
     Write-Host "Android build failed."
@@ -168,15 +195,15 @@ if ($buildExitCode -ne 0) {
     exit $buildExitCode
 }
 
-$apkPath = Join-Path $agentRepoPath "Builds\Android\Lint-It-Up.apk"
-$finalApkPath = Join-Path $FinalOutputDirectory "Lint-It-Up.apk"
-
-if (-not (Test-Path $apkPath)) {
+if (-not (Test-Path $finalApkPath)) {
     Write-Host ""
     Write-Host "First Unity run finished without producing the APK."
     Write-Host "Retrying once now that the clean clone has finished importing and compiling..."
 
-    $buildExitCode = Invoke-UnityAndroidBuild -UnityExePath $unityPath -ProjectPath $agentRepoPath -LogPath $logFile
+    Stop-BuildAgentUnityProcesses -ProjectPath $agentRepoPath
+    Remove-StaleUnityLocks -ProjectPath $agentRepoPath
+
+    $buildExitCode = Invoke-UnityAndroidBuild -UnityExePath $unityPath -ProjectPath $agentRepoPath -LogPath $logFile -ApkOutputPath $finalApkPath
     if ($buildExitCode -ne 0) {
         Write-Host ""
         Write-Host "Android build failed on retry."
@@ -184,15 +211,12 @@ if (-not (Test-Path $apkPath)) {
         exit $buildExitCode
     }
 
-    if (-not (Test-Path $apkPath)) {
-        throw "Build finished but APK was not found at $apkPath after retry"
+    if (-not (Test-Path $finalApkPath)) {
+        throw "Build finished but APK was not found at $finalApkPath after retry"
     }
 }
 
-Copy-Item -Path $apkPath -Destination $finalApkPath -Force
-
 Write-Host ""
 Write-Host "Android build completed successfully."
-Write-Host "Build copy APK path: $apkPath"
 Write-Host "Final APK path: $finalApkPath"
 Write-Host "Log path: $logFile"
