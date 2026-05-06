@@ -50,6 +50,30 @@ Either install that Unity version through Unity Hub or set UNITY_EDITOR_PATH to 
 "@
 }
 
+function Remove-StaleUnityLocks {
+    param([string]$ProjectPath)
+
+    $lockPaths = @(
+        (Join-Path $ProjectPath "Temp\UnityLockfile"),
+        (Join-Path $ProjectPath "Library\ArtifactDB-lock"),
+        (Join-Path $ProjectPath "Library\SourceAssetDB-lock")
+    )
+
+    foreach ($lockPath in $lockPaths) {
+        if (Test-Path $lockPath) {
+            try {
+                Remove-Item -Path $lockPath -Force -ErrorAction Stop
+                Write-Host "Removed stale lock: $lockPath"
+            }
+            catch {
+                Write-Host "Could not remove lock file: $lockPath"
+                Write-Host "Please close any Unity instance using the build copy and run again."
+                throw
+            }
+        }
+    }
+}
+
 function Sync-BuildAgentRepo {
     param(
         [string]$SourceRepoPath,
@@ -130,6 +154,7 @@ New-Item -ItemType Directory -Force -Path $FinalOutputDirectory | Out-Null
 Sync-BuildAgentRepo -SourceRepoPath $projectRoot -AgentRepoPath $agentRepoPath -BranchName $Branch
 
 $unityPath = Get-UnityEditorPath -ProjectPath $agentRepoPath
+Remove-StaleUnityLocks -ProjectPath $agentRepoPath
 
 Write-Host "Unity path: $unityPath"
 Write-Host "Build repo:  $agentRepoPath"
