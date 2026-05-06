@@ -1,0 +1,252 @@
+fileFormatVersion: 2
+guid: 441904387ac987644934f44d0e9292e4
+ModelImporter:
+  serializedVersion: 22200
+  internalIDToNameTable: []
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: AR3DMat PBR Gypsum Ceiling Lighted
+    second: {fileID: 2100000, guid: 54d927f55d10514439a2ff717e9c0f54, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Black painted plaster wall
+    second: {fileID: 2100000, guid: 0b4153e303ca85e46b60425902afc166, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Blue Checkered Carpet
+    second: {fileID: 2100000, guid: 1224c65361a20ef439f7763adb7abb09, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Green Emit
+    second: {fileID: 2100000, guid: c1a10184895e66c43a7538ed1cf8d18d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LED
+    second: {fileID: 2100000, guid: 80276b001a70cc246b36f0dbf39e3efa, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LED_Screen
+    second: {fileID: 2100000, guid: 7e7de535091c40d4fa54d63db9eeaef1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Legs
+    second: {fileID: 2100000, guid: de254f0cbddae284d9b07c647f1e34d3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Resin
+    second: {fileID: 2100000, guid: 4341f173d8c2bcf43b7f5ebb00e568f5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Seat_low_Baked.001
+    second: {fileID: 2100000, guid: 0223293605421e241b905cef7de82e6f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: seattle seahawks logo
+    second: {fileID: 2100000, guid: ef50e667d3360b84f96c749dece802c9, type: 2}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: 50335813118_f2bb9fdf40_o
+    second: {fileID: 2800000, guid: 05796d2487a097b4ab6f02fdcf2c0c3e, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: AR3Dmat_Gypsum_Board_Lighted_8K_Diffuse
+    second: {fileID: 2800000, guid: d9547e5e5150c804cbbb081990d2d033, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: AR3Dmat_Gypsum_Board_Lighted_8K_Emission
+    second: {fileID: 2800000, guid: 056ff60431d53e34abf3c10ae8bab85e, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: AR3Dmat_Gypsum_Board_Lighted_8K_Metalness
+    second: {fileID: 2800000, guid: 59b7bee7373e529419612758e2d1b656, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: AR3Dmat_Gypsum_Board_Lighted_8K_Normal
+    second: {fileID: 2800000, guid: f344e6337efcbec478d5d44006c6ce5f, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: AR3Dmat_Gypsum_Board_Lighted_8K_Roughness
+    second: {fileID: 2800000, guid: f3740f25b7cf2234cb347eee8145ad2d, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: BlackWall_Bake1_PBR_Diffuse
+    second: {fileID: 2800000, guid: c309511da59b6824a9098f6e7ca12653, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: BlackWall_Bake1_PBR_Metalness
+    second: {fileID: 2800000, guid: f321602d6e0f8df4b98145b2a0f21aa5, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: BlackWall_Bake1_PBR_Normal
+    second: {fileID: 2800000, guid: 1adb7fc32871e0042a34fdddb4b728a4, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: BlackWall_Bake1_PBR_Roughness
+    second: {fileID: 2800000, guid: 2a014949ce44fc14486f6ca48218aa0a, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Carpet006_4K-JPG_Color
+    second: {fileID: 2800000, guid: 31d49fbbccb039448967294199b9b5e0, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Carpet006_4K-JPG_NormalGL
+    second: {fileID: 2800000, guid: f3dfa7852a7c33742adb38ad840577b3, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Carpet006_4K-JPG_Roughness
+    second: {fileID: 2800000, guid: 832891f2220c0a04594d52d9ee321f82, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Green-emit
+    second: {fileID: 2800000, guid: ba61a0e49d560ab40ae6a6051bfcd9db, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Sofa_Bake1_PBR_Diffuse
+    second: {fileID: 2800000, guid: c43132ef7eae7c54a9fbc6097527173c, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Sofa_Bake1_PBR_Metalness
+    second: {fileID: 2800000, guid: 0c4a840ab5987fb4f92aab251b53a878, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Sofa_Bake1_PBR_Normal
+    second: {fileID: 2800000, guid: df54c7fe734646944b2b805a1efddd1c, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Sofa_Bake1_PBR_Roughness
+    second: {fileID: 2800000, guid: 77f611146d5ee9c4697066d2c62685df, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: seattle seahawks logo
+    second: {fileID: 2800000, guid: 1833d1d97be068f4992a4f0a0faa9078, type: 3}
+  materials:
+    materialImportMode: 2
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    removeConstantScaleCurves: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 0
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
+    importPhysicalCameras: 1
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    nodeNameCollisionStrategy: 1
+    fileIdsGeneration: 2
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    keepQuads: 0
+    weldVertices: 1
+    bakeAxisConversion: 0
+    preserveHierarchy: 0
+    skinWeightsMode: 0
+    maxBonesPerVertex: 4
+    minBoneWeight: 0.001
+    optimizeBones: 1
+    meshOptimizationFlags: -1
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVMarginMethod: 1
+    secondaryUVMinLightmapResolution: 40
+    secondaryUVMinObjectScale: 1
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+    strictVertexDataChecks: 0
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+  referencedClips: []
+  importAnimation: 1
+  humanDescription:
+    serializedVersion: 3
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    globalScale: 1
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  autoGenerateAvatarMappingIfUnspecified: 1
+  animationType: 2
+  humanoidOversampling: 1
+  avatarSetup: 0
+  addHumanoidExtraRootOnlyWhenUsingAvatar: 1
+  importBlendShapeDeformPercent: 1
+  remapMaterialsIfMaterialImportModeIsNone: 0
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
