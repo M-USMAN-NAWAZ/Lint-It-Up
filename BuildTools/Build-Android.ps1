@@ -1,7 +1,8 @@
 param(
     [string]$AgentFolderName = "Lint-It-Up",
     [string]$Branch = "main",
-    [string]$FinalOutputDirectory = "C:\Usman\APKs\APKs"
+    [string]$FinalOutputDirectory = "C:\Usman\APKs\APKs",
+    [string]$BuildAgentsRoot = "C:\Usman\BuildAgents"
 )
 
 $ErrorActionPreference = "Stop"
@@ -113,7 +114,6 @@ function Invoke-UnityAndroidBuild {
 }
 
 $projectRoot = Get-ProjectRoot
-$buildAgentsRoot = Join-Path $projectRoot "BuildAgents"
 $agentRepoPath = Join-Path $buildAgentsRoot $AgentFolderName
 $logsPath = Join-Path $buildAgentsRoot "Logs"
 $logFile = Join-Path $logsPath "android-build.log"
