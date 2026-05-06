@@ -42,3 +42,4 @@ Thumbs.db
 tmp/
 docs/rendered-plan/
 .utmp/
+BuildAgents/
