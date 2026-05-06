@@ -92,6 +92,26 @@ function Sync-BuildAgentRepo {
     }
 }
 
+function Invoke-UnityAndroidBuild {
+    param(
+        [string]$UnityExePath,
+        [string]$ProjectPath,
+        [string]$LogPath
+    )
+
+    & $UnityExePath `
+      -quit `
+      -batchmode `
+      -nographics `
+      -accept-apiupdate `
+      -buildTarget Android `
+      -projectPath $ProjectPath `
+      -executeMethod BuildScript.BuildAndroid `
+      -logFile $LogPath
+
+    return $LASTEXITCODE
+}
+
 $projectRoot = Get-ProjectRoot
 $buildAgentsRoot = Join-Path $projectRoot "BuildAgents"
 $agentRepoPath = Join-Path $buildAgentsRoot $AgentFolderName
@@ -110,26 +130,33 @@ Write-Host "Unity path: $unityPath"
 Write-Host "Build repo:  $agentRepoPath"
 Write-Host "Log file:    $logFile"
 
-& $unityPath `
-  -quit `
-  -batchmode `
-  -nographics `
-  -projectPath $agentRepoPath `
-  -executeMethod BuildScript.BuildAndroid `
-  -logFile $logFile
-
-if ($LASTEXITCODE -ne 0) {
+$buildExitCode = Invoke-UnityAndroidBuild -UnityExePath $unityPath -ProjectPath $agentRepoPath -LogPath $logFile
+if ($buildExitCode -ne 0) {
     Write-Host ""
     Write-Host "Android build failed."
     Write-Host "Check log: $logFile"
-    exit $LASTEXITCODE
+    exit $buildExitCode
 }
 
 $apkPath = Join-Path $agentRepoPath "Builds\Android\Lint-It-Up.apk"
 $finalApkPath = Join-Path $FinalOutputDirectory "Lint-It-Up.apk"
 
 if (-not (Test-Path $apkPath)) {
-    throw "Build finished but APK was not found at $apkPath"
+    Write-Host ""
+    Write-Host "First Unity run finished without producing the APK."
+    Write-Host "Retrying once now that the clean clone has finished importing and compiling..."
+
+    $buildExitCode = Invoke-UnityAndroidBuild -UnityExePath $unityPath -ProjectPath $agentRepoPath -LogPath $logFile
+    if ($buildExitCode -ne 0) {
+        Write-Host ""
+        Write-Host "Android build failed on retry."
+        Write-Host "Check log: $logFile"
+        exit $buildExitCode
+    }
+
+    if (-not (Test-Path $apkPath)) {
+        throw "Build finished but APK was not found at $apkPath after retry"
+    }
 }
 
 Copy-Item -Path $apkPath -Destination $finalApkPath -Force
