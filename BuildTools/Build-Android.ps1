@@ -1,6 +1,7 @@
 param(
     [string]$AgentFolderName = "Lint-It-Up",
-    [string]$Branch = "main"
+    [string]$Branch = "main",
+    [string]$FinalOutputDirectory = "C:\Usman\APKs\APKs"
 )
 
 $ErrorActionPreference = "Stop"
@@ -99,6 +100,7 @@ $logFile = Join-Path $logsPath "android-build.log"
 
 New-Item -ItemType Directory -Force -Path $buildAgentsRoot | Out-Null
 New-Item -ItemType Directory -Force -Path $logsPath | Out-Null
+New-Item -ItemType Directory -Force -Path $FinalOutputDirectory | Out-Null
 
 Sync-BuildAgentRepo -SourceRepoPath $projectRoot -AgentRepoPath $agentRepoPath -BranchName $Branch
 
@@ -124,8 +126,16 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 $apkPath = Join-Path $agentRepoPath "Builds\Android\Lint-It-Up.apk"
+$finalApkPath = Join-Path $FinalOutputDirectory "Lint-It-Up.apk"
+
+if (-not (Test-Path $apkPath)) {
+    throw "Build finished but APK was not found at $apkPath"
+}
+
+Copy-Item -Path $apkPath -Destination $finalApkPath -Force
 
 Write-Host ""
 Write-Host "Android build completed successfully."
-Write-Host "APK path: $apkPath"
+Write-Host "Build copy APK path: $apkPath"
+Write-Host "Final APK path: $finalApkPath"
 Write-Host "Log path: $logFile"

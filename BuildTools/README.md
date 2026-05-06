@@ -10,8 +10,10 @@ This project builds Android locally from a clean git copy inside:
 2. It clones or updates a clean copy in `BuildAgents\Lint-It-Up`.
 3. It finds the Unity editor path from `ProjectSettings\ProjectVersion.txt`.
 4. It runs Unity in batch mode with `BuildScript.BuildAndroid`.
-5. The APK is saved to:
+5. The build copy APK is created at:
    `BuildAgents\Lint-It-Up\Builds\Android\Lint-It-Up.apk`
+6. The final APK is copied to:
+   `C:\Usman\APKs\APKs\Lint-It-Up.apk`
 
 ## One-click build
 
