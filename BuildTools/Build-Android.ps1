@@ -96,6 +96,37 @@ function Stop-BuildAgentUnityProcesses {
     }
 }
 
+function Wait-BuildAgentUnityProcesses {
+    param(
+        [string]$ProjectPath,
+        [int]$TimeoutSeconds = 7200
+    )
+
+    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+
+    while ($true) {
+        try {
+            $unityProcesses = @(Get-CimInstance Win32_Process -Filter "Name = 'Unity.exe'" |
+                Where-Object { $_.CommandLine -like "*$ProjectPath*" })
+        }
+        catch {
+            Write-Host "Could not inspect Unity processes. Continuing without process wait."
+            return
+        }
+
+        if ($unityProcesses.Count -eq 0) {
+            return
+        }
+
+        if ((Get-Date) -ge $deadline) {
+            throw "Unity did not finish within $TimeoutSeconds seconds for $ProjectPath"
+        }
+
+        Write-Host "Unity is still importing/building in the build copy. Waiting..."
+        Start-Sleep -Seconds 10
+    }
+}
+
 function Sync-BuildAgentRepo {
     param(
         [string]$SourceRepoPath,
@@ -162,6 +193,8 @@ function Invoke-UnityAndroidBuild {
       -executeMethod BuildScript.BuildAndroid `
       -androidOutputPath $ApkOutputPath `
       -logFile $LogPath
+
+    Wait-BuildAgentUnityProcesses -ProjectPath $ProjectPath
 
     return $LASTEXITCODE
 }
