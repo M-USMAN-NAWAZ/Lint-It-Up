@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 1
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.38937345, g: 0.5283499, b: 0.6603774, a: 1}
-  m_SkyboxMaterial: {fileID: 2100000, guid: cdbb40e11399e4a17882ada20a1b896a, type: 2}
+  m_SkyboxMaterial: {fileID: 2100000, guid: 9af23ba5fa5364ff598888460e0e2759, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -655,9 +655,6 @@ MonoBehaviour:
   crouchBallHold: 0
   sideWalk: 0
   hasBall: 0
-  moveX: 0
-  moveZ: 0
-  moveSpeed: 0
   applyStatesEveryFrame: 1
 --- !u!1 &33222042
 GameObject:
@@ -820,9 +817,6 @@ MonoBehaviour:
   crouchBallHold: 0
   sideWalk: 1
   hasBall: 0
-  moveX: 0
-  moveZ: 0
-  moveSpeed: 0
   applyStatesEveryFrame: 1
 --- !u!1 &34152113
 GameObject:
@@ -4783,9 +4777,6 @@ MonoBehaviour:
   crouchBallHold: 0
   sideWalk: 0
   hasBall: 0
-  moveX: 0
-  moveZ: 0
-  moveSpeed: 0
   applyStatesEveryFrame: 1
 --- !u!1 &87727932
 GameObject:
@@ -5014,9 +5005,6 @@ MonoBehaviour:
   crouchBallHold: 0
   sideWalk: 0
   hasBall: 0
-  moveX: 0
-  moveZ: 0
-  moveSpeed: 0
   applyStatesEveryFrame: 1
 --- !u!1 &130274579
 GameObject:
@@ -5405,9 +5393,6 @@ MonoBehaviour:
   crouchBallHold: 0
   sideWalk: 0
   hasBall: 0
-  moveX: 0
-  moveZ: 0
-  moveSpeed: 0
   applyStatesEveryFrame: 1
 --- !u!1 &188601593
 GameObject:
@@ -5922,9 +5907,6 @@ MonoBehaviour:
   crouchBallHold: 0
   sideWalk: 0
   hasBall: 0
-  moveX: 0
-  moveZ: 0
-  moveSpeed: 0
   applyStatesEveryFrame: 1
 --- !u!1 &321766625
 GameObject:
@@ -6444,9 +6426,6 @@ MonoBehaviour:
   crouchBallHold: 0
   sideWalk: 0
   hasBall: 0
-  moveX: 0
-  moveZ: 0
-  moveSpeed: 0
   applyStatesEveryFrame: 1
 --- !u!1 &423005878
 GameObject:
@@ -7100,6 +7079,14 @@ PrefabInstance:
     - target: {fileID: -6844018674525622840, guid: d639ce391f4f45e4ab8cbc83c97a4f39, type: 3}
       propertyPath: m_LocalPosition.z
       value: -66.33
+      objectReference: {fileID: 0}
+    - target: {fileID: -5125212312346366219, guid: d639ce391f4f45e4ab8cbc83c97a4f39, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -1245406467610084178, guid: d639ce391f4f45e4ab8cbc83c97a4f39, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: d639ce391f4f45e4ab8cbc83c97a4f39, type: 3}
       propertyPath: m_Name
@@ -7962,9 +7949,6 @@ MonoBehaviour:
   crouchBallHold: 0
   sideWalk: 0
   hasBall: 0
-  moveX: 0
-  moveZ: 0
-  moveSpeed: 0
   applyStatesEveryFrame: 1
 --- !u!1 &794236186
 GameObject:
@@ -8497,9 +8481,6 @@ MonoBehaviour:
   crouchBallHold: 0
   sideWalk: 0
   hasBall: 0
-  moveX: 0
-  moveZ: 0
-  moveSpeed: 0
   applyStatesEveryFrame: 1
 --- !u!1 &823295343
 GameObject:
@@ -10076,9 +10057,6 @@ MonoBehaviour:
   crouchBallHold: 0
   sideWalk: 0
   hasBall: 0
-  moveX: 0
-  moveZ: 0
-  moveSpeed: 0
   applyStatesEveryFrame: 1
 --- !u!1 &1023813639
 GameObject:
@@ -10364,9 +10342,6 @@ MonoBehaviour:
   crouchBallHold: 0
   sideWalk: 0
   hasBall: 0
-  moveX: 0
-  moveZ: 0
-  moveSpeed: 0
   applyStatesEveryFrame: 1
 --- !u!1 &1055213040 stripped
 GameObject:
@@ -10538,9 +10513,6 @@ MonoBehaviour:
   crouchBallHold: 0
   sideWalk: 0
   hasBall: 0
-  moveX: 0
-  moveZ: 0
-  moveSpeed: 0
   applyStatesEveryFrame: 1
 --- !u!1 &1059225504
 GameObject:
@@ -11224,9 +11196,6 @@ MonoBehaviour:
   crouchBallHold: 0
   sideWalk: 0
   hasBall: 0
-  moveX: 0
-  moveZ: 0
-  moveSpeed: 0
   applyStatesEveryFrame: 1
 --- !u!1 &1185126504
 GameObject:
@@ -12219,9 +12188,6 @@ MonoBehaviour:
   crouchBallHold: 0
   sideWalk: 0
   hasBall: 0
-  moveX: 0
-  moveZ: 0
-  moveSpeed: 0
   applyStatesEveryFrame: 1
 --- !u!1 &1398769715
 GameObject:
@@ -12826,9 +12792,6 @@ MonoBehaviour:
   crouchBallHold: 0
   sideWalk: 0
   hasBall: 0
-  moveX: 0
-  moveZ: 0
-  moveSpeed: 0
   applyStatesEveryFrame: 1
 --- !u!1 &1469982481
 GameObject:
@@ -13615,9 +13578,6 @@ MonoBehaviour:
   crouchBallHold: 0
   sideWalk: 0
   hasBall: 0
-  moveX: 0
-  moveZ: 0
-  moveSpeed: 0
   applyStatesEveryFrame: 1
 --- !u!1 &1615083365
 GameObject:
@@ -13779,9 +13739,6 @@ MonoBehaviour:
   crouchBallHold: 0
   sideWalk: 0
   hasBall: 0
-  moveX: 0
-  moveZ: 0
-  moveSpeed: 0
   applyStatesEveryFrame: 1
 --- !u!4 &1646889961 stripped
 Transform:
@@ -14503,9 +14460,6 @@ MonoBehaviour:
   crouchBallHold: 0
   sideWalk: 0
   hasBall: 0
-  moveX: 0
-  moveZ: 0
-  moveSpeed: 0
   applyStatesEveryFrame: 1
 --- !u!1 &1733305380
 GameObject:
@@ -14812,9 +14766,6 @@ MonoBehaviour:
   crouchBallHold: 0
   sideWalk: 0
   hasBall: 0
-  moveX: 0
-  moveZ: 0
-  moveSpeed: 0
   applyStatesEveryFrame: 1
 --- !u!1 &1759388416
 GameObject:
@@ -16760,9 +16711,6 @@ MonoBehaviour:
   crouchBallHold: 0
   sideWalk: 0
   hasBall: 0
-  moveX: 0
-  moveZ: 0
-  moveSpeed: 0
   applyStatesEveryFrame: 1
 --- !u!1 &2096342926
 GameObject:
@@ -16924,9 +16872,6 @@ MonoBehaviour:
   crouchBallHold: 0
   sideWalk: 0
   hasBall: 0
-  moveX: 0
-  moveZ: 0
-  moveSpeed: 0
   applyStatesEveryFrame: 1
 --- !u!1 &2108562665
 GameObject:
