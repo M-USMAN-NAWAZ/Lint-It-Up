@@ -200,6 +200,12 @@ public class FootballAnimationStateDriver : MonoBehaviour
 
         idle = false;
         running = isMoving && !useSideWalk;
+        
+        if (isMoving && running)
+        {
+            Debug.Log("Runing true");
+        }
+
         sideWalk = useSideWalk;
         ballGrabRunning = false;
         hasBall = carryingBall;
@@ -333,6 +339,7 @@ public class FootballAnimationStateDriver : MonoBehaviour
             resolvedRunning = false;
             resolvedSideWalk = false;
             resolvedHasBall = resolvedCrouchBallHold;
+            //Debug.Log("running false");
         }
         else if (resolvedSideWalk)
         {

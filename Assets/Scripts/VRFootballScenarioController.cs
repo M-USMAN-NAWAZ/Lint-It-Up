@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.XR.Interaction.Toolkit;
@@ -623,7 +624,7 @@ public class VRFootballScenarioController : MonoBehaviour
         if (footballBody != null)
         {
             footballBody.position = snapTarget.position;
-            footballBody.rotation = snapTarget.rotation;
+            footballBody.rotation = quaternion.Euler(0,0,90);
 
             if (resetVelocity)
             {
@@ -769,7 +770,7 @@ public class VRFootballScenarioController : MonoBehaviour
             footballBody.linearVelocity = Vector3.zero;
             footballBody.angularVelocity = Vector3.zero;
             footballBody.position = passOrigin.position;
-            footballBody.rotation = passOrigin.rotation;
+            footballBody.rotation = quaternion.Euler(0,0,90);
         }
     }
 
@@ -794,7 +795,7 @@ public class VRFootballScenarioController : MonoBehaviour
             footballBody.linearVelocity = Vector3.zero;
             footballBody.angularVelocity = Vector3.zero;
             footballBody.position = passOrigin.position;
-            footballBody.rotation = passOrigin.rotation;
+            footballBody.rotation = quaternion.Euler(0,0,90);
         }
     }
 
@@ -1174,7 +1175,7 @@ public class VRFootballScenarioController : MonoBehaviour
         {
             footballBody.isKinematic = true;
             footballBody.position = holdTarget.position;
-            footballBody.rotation = holdTarget.rotation;
+            footballBody.rotation = quaternion.Euler(0,0,90);
             footballBody.linearVelocity = Vector3.zero;
             footballBody.angularVelocity = Vector3.zero;
         }
@@ -1430,7 +1431,7 @@ public class VRFootballScenarioController : MonoBehaviour
         {
             footballBody.isKinematic = true;
             footballBody.position = targetPosition;
-            footballBody.rotation = targetRotation;
+            footballBody.rotation = quaternion.Euler(0,0,90);
             footballBody.linearVelocity = Vector3.zero;
             footballBody.angularVelocity = Vector3.zero;
         }

@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 1
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.38937345, g: 0.5283499, b: 0.6603774, a: 1}
-  m_SkyboxMaterial: {fileID: 2100000, guid: 9af23ba5fa5364ff598888460e0e2759, type: 2}
+  m_SkyboxMaterial: {fileID: 2100000, guid: 01f4eb1c73693428d923f1520032e7f9, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -315,15 +315,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5790362245941073629, guid: 753505d367f39d04c8ef944e9491a149, type: 3}
       propertyPath: m_LocalScale.x
-      value: 45
+      value: 35
       objectReference: {fileID: 0}
     - target: {fileID: 5790362245941073629, guid: 753505d367f39d04c8ef944e9491a149, type: 3}
       propertyPath: m_LocalScale.y
-      value: 45
+      value: 35
       objectReference: {fileID: 0}
     - target: {fileID: 5790362245941073629, guid: 753505d367f39d04c8ef944e9491a149, type: 3}
       propertyPath: m_LocalScale.z
-      value: 45
+      value: 35
       objectReference: {fileID: 0}
     - target: {fileID: 5790362245941073629, guid: 753505d367f39d04c8ef944e9491a149, type: 3}
       propertyPath: m_LocalPosition.x
@@ -339,19 +339,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5790362245941073629, guid: 753505d367f39d04c8ef944e9491a149, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 1
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: 5790362245941073629, guid: 753505d367f39d04c8ef944e9491a149, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5790362245941073629, guid: 753505d367f39d04c8ef944e9491a149, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5790362245941073629, guid: 753505d367f39d04c8ef944e9491a149, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: 5790362245941073629, guid: 753505d367f39d04c8ef944e9491a149, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -363,7 +363,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5790362245941073629, guid: 753505d367f39d04c8ef944e9491a149, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
+      value: 90
       objectReference: {fileID: 0}
     - target: {fileID: 5922422646180309903, guid: 753505d367f39d04c8ef944e9491a149, type: 3}
       propertyPath: m_UseDynamicAttach
@@ -643,19 +643,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   animator: {fileID: 32125753}
-  idle: 0
+  idle: 1
   running: 1
-  ballGrabRunning: 0
-  ballCatch: 0
+  ballGrabRunning: 1
+  ballCatch: 1
   push: 1
   hugPush: 1
-  fallDown: 0
+  fallDown: 1
   ballHutHut: 1
-  crouchIdle: 0
-  crouchBallHold: 0
-  sideWalk: 0
-  hasBall: 0
-  applyStatesEveryFrame: 1
+  crouchIdle: 1
+  crouchBallHold: 1
+  sideWalk: 1
+  hasBall: 1
+  applyStatesEveryFrame: 0
 --- !u!1 &33222042
 GameObject:
   m_ObjectHideFlags: 0
@@ -807,17 +807,17 @@ MonoBehaviour:
   animator: {fileID: 33222047}
   idle: 1
   running: 1
-  ballGrabRunning: 0
-  ballCatch: 0
+  ballGrabRunning: 1
+  ballCatch: 1
   push: 1
   hugPush: 1
-  fallDown: 0
-  ballHutHut: 0
+  fallDown: 1
+  ballHutHut: 1
   crouchIdle: 1
-  crouchBallHold: 0
+  crouchBallHold: 1
   sideWalk: 1
-  hasBall: 0
-  applyStatesEveryFrame: 1
+  hasBall: 1
+  applyStatesEveryFrame: 0
 --- !u!1 &34152113
 GameObject:
   m_ObjectHideFlags: 0
@@ -843,7 +843,7 @@ Transform:
   m_GameObject: {fileID: 34152113}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 13.356, y: 1.02, z: 7.777}
+  m_LocalPosition: {x: 12.81, y: 1.02, z: 8.232}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -874,7 +874,7 @@ Transform:
   m_GameObject: {fileID: 43867790}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 13.928, y: 1.02, z: 6.9}
+  m_LocalPosition: {x: 13.609, y: 1.02, z: 6.216}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4767,17 +4767,17 @@ MonoBehaviour:
   animator: {fileID: 81842400}
   idle: 1
   running: 0
-  ballGrabRunning: 0
-  ballCatch: 0
-  push: 0
-  hugPush: 0
-  fallDown: 0
-  ballHutHut: 0
-  crouchIdle: 0
-  crouchBallHold: 0
-  sideWalk: 0
-  hasBall: 0
-  applyStatesEveryFrame: 1
+  ballGrabRunning: 1
+  ballCatch: 1
+  push: 1
+  hugPush: 1
+  fallDown: 1
+  ballHutHut: 1
+  crouchIdle: 1
+  crouchBallHold: 1
+  sideWalk: 1
+  hasBall: 1
+  applyStatesEveryFrame: 0
 --- !u!1 &87727932
 GameObject:
   m_ObjectHideFlags: 0
@@ -4993,19 +4993,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   animator: {fileID: 122135971}
-  idle: 0
+  idle: 1
   running: 1
-  ballGrabRunning: 0
-  ballCatch: 0
+  ballGrabRunning: 1
+  ballCatch: 1
   push: 1
   hugPush: 1
-  fallDown: 0
+  fallDown: 1
   ballHutHut: 1
-  crouchIdle: 0
-  crouchBallHold: 0
-  sideWalk: 0
-  hasBall: 0
-  applyStatesEveryFrame: 1
+  crouchIdle: 1
+  crouchBallHold: 1
+  sideWalk: 1
+  hasBall: 1
+  applyStatesEveryFrame: 0
 --- !u!1 &130274579
 GameObject:
   m_ObjectHideFlags: 0
@@ -5383,17 +5383,17 @@ MonoBehaviour:
   animator: {fileID: 171961922}
   idle: 1
   running: 1
-  ballGrabRunning: 0
-  ballCatch: 0
+  ballGrabRunning: 1
+  ballCatch: 1
   push: 1
   hugPush: 1
-  fallDown: 0
-  ballHutHut: 0
+  fallDown: 1
+  ballHutHut: 1
   crouchIdle: 1
-  crouchBallHold: 0
-  sideWalk: 0
-  hasBall: 0
-  applyStatesEveryFrame: 1
+  crouchBallHold: 1
+  sideWalk: 1
+  hasBall: 1
+  applyStatesEveryFrame: 0
 --- !u!1 &188601593
 GameObject:
   m_ObjectHideFlags: 0
@@ -5895,19 +5895,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   animator: {fileID: 318220213}
-  idle: 0
+  idle: 1
   running: 1
-  ballGrabRunning: 0
-  ballCatch: 0
+  ballGrabRunning: 1
+  ballCatch: 1
   push: 1
   hugPush: 1
-  fallDown: 0
+  fallDown: 1
   ballHutHut: 1
-  crouchIdle: 0
-  crouchBallHold: 0
-  sideWalk: 0
-  hasBall: 0
-  applyStatesEveryFrame: 1
+  crouchIdle: 1
+  crouchBallHold: 1
+  sideWalk: 1
+  hasBall: 1
+  applyStatesEveryFrame: 0
 --- !u!1 &321766625
 GameObject:
   m_ObjectHideFlags: 0
@@ -6416,17 +6416,17 @@ MonoBehaviour:
   animator: {fileID: 405080203}
   idle: 1
   running: 1
-  ballGrabRunning: 0
-  ballCatch: 0
+  ballGrabRunning: 1
+  ballCatch: 1
   push: 1
   hugPush: 1
-  fallDown: 0
-  ballHutHut: 0
+  fallDown: 1
+  ballHutHut: 1
   crouchIdle: 1
-  crouchBallHold: 0
-  sideWalk: 0
-  hasBall: 0
-  applyStatesEveryFrame: 1
+  crouchBallHold: 1
+  sideWalk: 1
+  hasBall: 1
+  applyStatesEveryFrame: 0
 --- !u!1 &423005878
 GameObject:
   m_ObjectHideFlags: 0
@@ -7939,17 +7939,17 @@ MonoBehaviour:
   animator: {fileID: 790712517}
   idle: 1
   running: 1
-  ballGrabRunning: 0
-  ballCatch: 0
+  ballGrabRunning: 1
+  ballCatch: 1
   push: 1
   hugPush: 1
-  fallDown: 0
-  ballHutHut: 0
+  fallDown: 1
+  ballHutHut: 1
   crouchIdle: 1
-  crouchBallHold: 0
-  sideWalk: 0
-  hasBall: 0
-  applyStatesEveryFrame: 1
+  crouchBallHold: 1
+  sideWalk: 1
+  hasBall: 1
+  applyStatesEveryFrame: 0
 --- !u!1 &794236186
 GameObject:
   m_ObjectHideFlags: 0
@@ -8471,17 +8471,17 @@ MonoBehaviour:
   animator: {fileID: 816309903}
   idle: 1
   running: 0
-  ballGrabRunning: 0
-  ballCatch: 0
-  push: 0
-  hugPush: 0
-  fallDown: 0
-  ballHutHut: 0
-  crouchIdle: 0
-  crouchBallHold: 0
-  sideWalk: 0
-  hasBall: 0
-  applyStatesEveryFrame: 1
+  ballGrabRunning: 1
+  ballCatch: 1
+  push: 1
+  hugPush: 1
+  fallDown: 1
+  ballHutHut: 1
+  crouchIdle: 1
+  crouchBallHold: 1
+  sideWalk: 1
+  hasBall: 1
+  applyStatesEveryFrame: 0
 --- !u!1 &823295343
 GameObject:
   m_ObjectHideFlags: 0
@@ -9323,7 +9323,7 @@ Transform:
   m_GameObject: {fileID: 946849721}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.96, y: 0.192, z: 9.45}
+  m_LocalPosition: {x: 1.771, y: 0.192, z: 9.45}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -10045,19 +10045,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   animator: {fileID: 1020802102}
-  idle: 0
+  idle: 1
   running: 1
-  ballGrabRunning: 0
-  ballCatch: 0
+  ballGrabRunning: 1
+  ballCatch: 1
   push: 1
   hugPush: 1
-  fallDown: 0
+  fallDown: 1
   ballHutHut: 1
-  crouchIdle: 0
-  crouchBallHold: 0
-  sideWalk: 0
-  hasBall: 0
-  applyStatesEveryFrame: 1
+  crouchIdle: 1
+  crouchBallHold: 1
+  sideWalk: 1
+  hasBall: 1
+  applyStatesEveryFrame: 0
 --- !u!1 &1023813639
 GameObject:
   m_ObjectHideFlags: 0
@@ -10332,17 +10332,17 @@ MonoBehaviour:
   animator: {fileID: 1050354617}
   idle: 1
   running: 1
-  ballGrabRunning: 0
-  ballCatch: 0
+  ballGrabRunning: 1
+  ballCatch: 1
   push: 1
   hugPush: 1
-  fallDown: 0
-  ballHutHut: 0
+  fallDown: 1
+  ballHutHut: 1
   crouchIdle: 1
-  crouchBallHold: 0
-  sideWalk: 0
-  hasBall: 0
-  applyStatesEveryFrame: 1
+  crouchBallHold: 1
+  sideWalk: 1
+  hasBall: 1
+  applyStatesEveryFrame: 0
 --- !u!1 &1055213040 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 657184243640684908, guid: d6878e1999eb4b44a9f5a263af86c185, type: 3}
@@ -10503,17 +10503,17 @@ MonoBehaviour:
   animator: {fileID: 1057404124}
   idle: 1
   running: 1
-  ballGrabRunning: 0
-  ballCatch: 0
+  ballGrabRunning: 1
+  ballCatch: 1
   push: 1
   hugPush: 1
-  fallDown: 0
-  ballHutHut: 0
+  fallDown: 1
+  ballHutHut: 1
   crouchIdle: 1
-  crouchBallHold: 0
-  sideWalk: 0
-  hasBall: 0
-  applyStatesEveryFrame: 1
+  crouchBallHold: 1
+  sideWalk: 1
+  hasBall: 1
+  applyStatesEveryFrame: 0
 --- !u!1 &1059225504
 GameObject:
   m_ObjectHideFlags: 0
@@ -11184,19 +11184,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   animator: {fileID: 1182083731}
-  idle: 0
+  idle: 1
   running: 1
-  ballGrabRunning: 0
-  ballCatch: 0
+  ballGrabRunning: 1
+  ballCatch: 1
   push: 1
   hugPush: 1
-  fallDown: 0
+  fallDown: 1
   ballHutHut: 1
-  crouchIdle: 0
-  crouchBallHold: 0
-  sideWalk: 0
-  hasBall: 0
-  applyStatesEveryFrame: 1
+  crouchIdle: 1
+  crouchBallHold: 1
+  sideWalk: 1
+  hasBall: 1
+  applyStatesEveryFrame: 0
 --- !u!1 &1185126504
 GameObject:
   m_ObjectHideFlags: 0
@@ -12176,19 +12176,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   animator: {fileID: 1393972620}
-  idle: 0
+  idle: 1
   running: 1
-  ballGrabRunning: 0
-  ballCatch: 0
+  ballGrabRunning: 1
+  ballCatch: 1
   push: 1
   hugPush: 1
-  fallDown: 0
+  fallDown: 1
   ballHutHut: 1
-  crouchIdle: 0
-  crouchBallHold: 0
-  sideWalk: 0
-  hasBall: 0
-  applyStatesEveryFrame: 1
+  crouchIdle: 1
+  crouchBallHold: 1
+  sideWalk: 1
+  hasBall: 1
+  applyStatesEveryFrame: 0
 --- !u!1 &1398769715
 GameObject:
   m_ObjectHideFlags: 0
@@ -12782,17 +12782,17 @@ MonoBehaviour:
   animator: {fileID: 1464268206}
   idle: 1
   running: 1
-  ballGrabRunning: 0
-  ballCatch: 0
+  ballGrabRunning: 1
+  ballCatch: 1
   push: 1
   hugPush: 1
-  fallDown: 0
-  ballHutHut: 0
+  fallDown: 1
+  ballHutHut: 1
   crouchIdle: 1
-  crouchBallHold: 0
-  sideWalk: 0
-  hasBall: 0
-  applyStatesEveryFrame: 1
+  crouchBallHold: 1
+  sideWalk: 1
+  hasBall: 1
+  applyStatesEveryFrame: 0
 --- !u!1 &1469982481
 GameObject:
   m_ObjectHideFlags: 0
@@ -13566,19 +13566,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   animator: {fileID: 1613886696}
-  idle: 0
+  idle: 1
   running: 1
-  ballGrabRunning: 0
-  ballCatch: 0
+  ballGrabRunning: 1
+  ballCatch: 1
   push: 1
   hugPush: 1
-  fallDown: 0
+  fallDown: 1
   ballHutHut: 1
-  crouchIdle: 0
-  crouchBallHold: 0
-  sideWalk: 0
-  hasBall: 0
-  applyStatesEveryFrame: 1
+  crouchIdle: 1
+  crouchBallHold: 1
+  sideWalk: 1
+  hasBall: 1
+  applyStatesEveryFrame: 0
 --- !u!1 &1615083365
 GameObject:
   m_ObjectHideFlags: 0
@@ -13727,19 +13727,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   animator: {fileID: 1615083370}
-  idle: 0
+  idle: 1
   running: 1
-  ballGrabRunning: 0
-  ballCatch: 0
+  ballGrabRunning: 1
+  ballCatch: 1
   push: 1
   hugPush: 1
-  fallDown: 0
+  fallDown: 1
   ballHutHut: 1
-  crouchIdle: 0
-  crouchBallHold: 0
-  sideWalk: 0
-  hasBall: 0
-  applyStatesEveryFrame: 1
+  crouchIdle: 1
+  crouchBallHold: 1
+  sideWalk: 1
+  hasBall: 1
+  applyStatesEveryFrame: 0
 --- !u!4 &1646889961 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 0f254147f6881f749992c47cda088bde, type: 3}
@@ -14448,19 +14448,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   animator: {fileID: 1733092199}
-  idle: 0
+  idle: 1
   running: 1
-  ballGrabRunning: 0
-  ballCatch: 0
+  ballGrabRunning: 1
+  ballCatch: 1
   push: 1
   hugPush: 1
-  fallDown: 0
+  fallDown: 1
   ballHutHut: 1
-  crouchIdle: 0
-  crouchBallHold: 0
-  sideWalk: 0
-  hasBall: 0
-  applyStatesEveryFrame: 1
+  crouchIdle: 1
+  crouchBallHold: 1
+  sideWalk: 1
+  hasBall: 1
+  applyStatesEveryFrame: 0
 --- !u!1 &1733305380
 GameObject:
   m_ObjectHideFlags: 0
@@ -14756,17 +14756,17 @@ MonoBehaviour:
   animator: {fileID: 1759216909}
   idle: 1
   running: 1
-  ballGrabRunning: 0
-  ballCatch: 0
+  ballGrabRunning: 1
+  ballCatch: 1
   push: 1
   hugPush: 1
-  fallDown: 0
-  ballHutHut: 0
+  fallDown: 1
+  ballHutHut: 1
   crouchIdle: 1
-  crouchBallHold: 0
-  sideWalk: 0
-  hasBall: 0
-  applyStatesEveryFrame: 1
+  crouchBallHold: 1
+  sideWalk: 1
+  hasBall: 1
+  applyStatesEveryFrame: 0
 --- !u!1 &1759388416
 GameObject:
   m_ObjectHideFlags: 0
@@ -16699,19 +16699,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   animator: {fileID: 2091130000}
-  idle: 0
+  idle: 1
   running: 1
-  ballGrabRunning: 0
-  ballCatch: 0
+  ballGrabRunning: 1
+  ballCatch: 1
   push: 1
   hugPush: 1
-  fallDown: 0
-  ballHutHut: 0
-  crouchIdle: 0
-  crouchBallHold: 0
-  sideWalk: 0
-  hasBall: 0
-  applyStatesEveryFrame: 1
+  fallDown: 1
+  ballHutHut: 1
+  crouchIdle: 1
+  crouchBallHold: 1
+  sideWalk: 1
+  hasBall: 1
+  applyStatesEveryFrame: 0
 --- !u!1 &2096342926
 GameObject:
   m_ObjectHideFlags: 0
@@ -16860,19 +16860,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   animator: {fileID: 2096342931}
-  idle: 0
+  idle: 1
   running: 1
-  ballGrabRunning: 0
-  ballCatch: 0
+  ballGrabRunning: 1
+  ballCatch: 1
   push: 1
   hugPush: 1
-  fallDown: 0
-  ballHutHut: 0
-  crouchIdle: 0
-  crouchBallHold: 0
-  sideWalk: 0
-  hasBall: 0
-  applyStatesEveryFrame: 1
+  fallDown: 1
+  ballHutHut: 1
+  crouchIdle: 1
+  crouchBallHold: 1
+  sideWalk: 1
+  hasBall: 1
+  applyStatesEveryFrame: 0
 --- !u!1 &2108562665
 GameObject:
   m_ObjectHideFlags: 0
