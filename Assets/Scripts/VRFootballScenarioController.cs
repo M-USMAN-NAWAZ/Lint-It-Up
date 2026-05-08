@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.XR.Interaction.Toolkit;
@@ -27,8 +26,6 @@ public class VRFootballScenarioController : MonoBehaviour
         public Transform target;
         public float completionRadius = 1f;
         public float taskDuration = 3f;
-        [Range(0.05f, 1f)] public float slowMotionScale = 0.25f;
-        public float slowMotionDuration = 1.25f;
         public bool requireBallInHand;
     }
 
@@ -51,8 +48,10 @@ public class VRFootballScenarioController : MonoBehaviour
     [SerializeField] float passTravelTime = 0.7f;
     [SerializeField] AnimationCurve passArc = AnimationCurve.EaseInOut(0f, 0f, 1f, 0f);
     [SerializeField] float passArcHeight = 0.45f;
-    [SerializeField] float passSpinStrength = 14f;
     [SerializeField] bool keepCountdownVisibleUntilBallToss = true;
+
+    [Header("Ball Orientation")]
+    [SerializeField] Vector3 scriptedBallEulerRotation = new Vector3(0f, 0f, 90f);
 
     [Header("Goal Throw")]
     [SerializeField] float throwDirectionAcceptanceDot = 0.55f;
@@ -83,6 +82,13 @@ public class VRFootballScenarioController : MonoBehaviour
     [SerializeField] float interTaskDelay = 0.15f;
     [SerializeField] float failureScreenDuration = 1.5f;
 
+    [Header("Point Pause")]
+    [SerializeField] bool pauseBeforeEachTaskInstruction = true;
+    [SerializeField] bool pauseAfterEachCompletedTask = true;
+    [SerializeField] string resumeTitle = "Point Complete";
+    [SerializeField] string resumeDescription = "Everything is paused. Press resume when you are ready for the next step.";
+    [SerializeField] string resumeHint = "Press the Resume button to continue.";
+
     [Header("Win Flow")]
     [SerializeField] string winSceneName = "Theater";
     [SerializeField] float winScreenDuration = 3f;
@@ -105,6 +111,7 @@ public class VRFootballScenarioController : MonoBehaviour
     bool taskFailedEarly;
     bool lockBallAtPassOrigin;
     bool ballTossStarted;
+    bool waitingForResume;
     int currentTaskIndex = -1;
     float defaultFixedDeltaTime;
     float closestGoalThrowDistance = float.MaxValue;
@@ -116,6 +123,18 @@ public class VRFootballScenarioController : MonoBehaviour
     string earlyFailureMessage = string.Empty;
     Coroutine goalThrowReleaseRoutine;
     Coroutine goalCatchRoutine;
+    readonly Dictionary<Animator, float> pausedAnimatorSpeeds = new Dictionary<Animator, float>();
+    static bool worldPaused;
+    readonly Dictionary<Rigidbody, PausedRigidbodyState> pausedRigidbodies = new Dictionary<Rigidbody, PausedRigidbodyState>();
+
+    struct PausedRigidbodyState
+    {
+        public bool isKinematic;
+        public Vector3 linearVelocity;
+        public Vector3 angularVelocity;
+    }
+
+    public static bool IsWorldPaused => worldPaused;
 
     public List<ScenarioTask> Tasks => tasks;
     public Transform ObjectiveIndicator
@@ -140,8 +159,6 @@ public class VRFootballScenarioController : MonoBehaviour
                 controlHint = "Pinch or grab with either hand to catch the ball.",
                 taskType = ScenarioTaskType.CatchBall,
                 taskDuration = 4f,
-                slowMotionScale = 0.22f,
-                slowMotionDuration = 1.25f,
             },
             new ScenarioTask
             {
@@ -150,8 +167,6 @@ public class VRFootballScenarioController : MonoBehaviour
                 controlHint = "Move your VR body toward the highlighted faker spot while holding the ball.",
                 taskType = ScenarioTaskType.ReachZone,
                 taskDuration = 3f,
-                slowMotionScale = 0.25f,
-                slowMotionDuration = 1.1f,
                 completionRadius = 1.1f,
                 requireBallInHand = true,
             },
@@ -162,8 +177,6 @@ public class VRFootballScenarioController : MonoBehaviour
                 controlHint = "Extend the hand holding the ball toward the fake target.",
                 taskType = ScenarioTaskType.ReachWithHand,
                 taskDuration = 2.5f,
-                slowMotionScale = 0.2f,
-                slowMotionDuration = 1.1f,
                 completionRadius = 0.55f,
                 requireBallInHand = true,
             },
@@ -174,8 +187,6 @@ public class VRFootballScenarioController : MonoBehaviour
                 controlHint = "Keep the ball in hand and move your body to the safe zone.",
                 taskType = ScenarioTaskType.ReachZone,
                 taskDuration = 3f,
-                slowMotionScale = 0.25f,
-                slowMotionDuration = 1.1f,
                 completionRadius = 1.1f,
                 requireBallInHand = true,
             },
@@ -186,8 +197,6 @@ public class VRFootballScenarioController : MonoBehaviour
                 controlHint = "Release the ball toward the goal target with a throwing motion.",
                 taskType = ScenarioTaskType.ThrowBallToTarget,
                 taskDuration = 4f,
-                slowMotionScale = 0.2f,
-                slowMotionDuration = 1.25f,
                 completionRadius = 1f,
                 requireBallInHand = true,
             }
@@ -202,17 +211,28 @@ public class VRFootballScenarioController : MonoBehaviour
             football.selectExited.AddListener(OnBallSelectExited);
         }
 
+        if (scenarioUI != null)
+        {
+            scenarioUI.ResumeRequested += ResumeFromPointPause;
+        }
+
         UpdateThrowTrajectoryLine();
     }
 
     void OnDisable()
     {
         RestoreNormalTime();
+        SetWorldPaused(false);
 
         if (football != null)
         {
             football.selectEntered.RemoveListener(OnBallSelectEntered);
             football.selectExited.RemoveListener(OnBallSelectExited);
+        }
+
+        if (scenarioUI != null)
+        {
+            scenarioUI.ResumeRequested -= ResumeFromPointPause;
         }
 
         SetThrowTrajectoryVisible(false);
@@ -243,13 +263,36 @@ public class VRFootballScenarioController : MonoBehaviour
 
     void Update()
     {
+        MaintainWorldPaused();
+        if (worldPaused)
+        {
+            return;
+        }
+
         MaintainBallAtPassOrigin();
         UpdateGoalThrowState();
         UpdateThrowTrajectoryLine();
     }
 
+    void FixedUpdate()
+    {
+        MaintainWorldPaused();
+        if (worldPaused)
+        {
+            return;
+        }
+
+        MaintainScriptedBallRotation();
+    }
+
     void LateUpdate()
     {
+        MaintainWorldPaused();
+        if (worldPaused)
+        {
+            return;
+        }
+
         if (ballHeldByUser && football != null && football.isSelected && selectedBallHand != null)
         {
             SnapFootballToTransform(selectedBallHand, false);
@@ -447,37 +490,29 @@ public class VRFootballScenarioController : MonoBehaviour
         UpdateHandObjectiveIndicator(GetHandIndicatorTarget(task), true);
         UpdateThrowTrajectoryLine();
 
-        ApplySlowMotion(task.slowMotionScale);
+        var elapsed = 0f;
+        var duration = Mathf.Max(0.1f, task.taskDuration);
+        yield return PauseBeforeTaskInstruction(task, duration);
 
         if (task.taskType == ScenarioTaskType.CatchBall)
         {
             yield return StartCatchBallSequence(task);
         }
 
-        var elapsed = 0f;
-        var duration = Mathf.Max(0.1f, task.taskDuration);
-        var slowMotionDuration = Mathf.Clamp(task.slowMotionDuration, 0f, duration);
-        var slowMotionActive = slowMotionDuration > 0f;
-
         while (elapsed < duration || ShouldKeepWatchingGoalThrow(task) || ShouldWaitForGoalReceiver(task))
         {
             var waitingForGoalReceiver = ShouldWaitForGoalReceiver(task);
-            if (waitingForGoalReceiver && slowMotionActive)
-            {
-                RestoreNormalTime();
-                slowMotionActive = false;
-            }
-
             var remaining = Mathf.Max(duration - elapsed, GetGoalThrowWatchRemaining(task));
             var shouldShowTaskUi = task.taskType != ScenarioTaskType.CatchBall || !keepCountdownVisibleUntilBallToss || ballTossStarted;
             if (scenarioUI != null && shouldShowTaskUi)
             {
-                scenarioUI.ShowTask(task.title, task.instruction, task.controlHint, remaining);
+                scenarioUI.UpdateTaskTimer(remaining);
             }
 
             if (EvaluateTask(task))
             {
-                RestoreNormalTime();
+                yield return PauseAfterTaskCompletion(task);
+
                 if (scenarioUI != null)
                 {
                     scenarioUI.HideTask();
@@ -499,12 +534,6 @@ public class VRFootballScenarioController : MonoBehaviour
             if (!waitingForGoalReceiver)
             {
                 elapsed += Time.unscaledDeltaTime;
-            }
-
-            if (slowMotionActive && elapsed >= slowMotionDuration)
-            {
-                RestoreNormalTime();
-                slowMotionActive = false;
             }
 
             yield return null;
@@ -572,15 +601,220 @@ public class VRFootballScenarioController : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
-    void ApplySlowMotion(float timeScale)
+    IEnumerator PauseBeforeTaskInstruction(ScenarioTask task, float duration)
     {
-        var clampedScale = Mathf.Clamp(timeScale, 0.05f, 1f);
-        Time.timeScale = clampedScale;
-        Time.fixedDeltaTime = defaultFixedDeltaTime * clampedScale;
+        if (!pauseBeforeEachTaskInstruction)
+        {
+            if (scenarioUI != null)
+            {
+                scenarioUI.ShowTask(task.title, task.instruction, task.controlHint, duration);
+            }
+            yield break;
+        }
+
+        waitingForResume = true;
+        SetWorldPaused(true);
+
+        if (scenarioUI != null)
+        {
+            scenarioUI.ShowTask(task.title, task.instruction, task.controlHint, duration);
+        }
+
+        while (waitingForResume)
+        {
+            yield return null;
+        }
+
+        SetWorldPaused(false);
+        RestoreNormalTime();
+    }
+
+    IEnumerator PauseAfterTaskCompletion(ScenarioTask task)
+    {
+        if (!pauseAfterEachCompletedTask)
+        {
+            RestoreNormalTime();
+            yield break;
+        }
+
+        waitingForResume = true;
+
+        if (scenarioUI != null)
+        {
+            scenarioUI.ShowResume(resumeTitle, resumeDescription, resumeHint);
+        }
+
+        // Let the resume panel become visible before freezing the world.
+        yield return null;
+
+        if (waitingForResume)
+        {
+            SetWorldPaused(true);
+        }
+
+        while (waitingForResume)
+        {
+            yield return null;
+        }
+
+        SetWorldPaused(false);
+        RestoreNormalTime();
+    }
+
+    public void ResumeFromPointPause()
+    {
+        waitingForResume = false;
+    }
+
+    void SetWorldPaused(bool paused)
+    {
+        worldPaused = paused;
+
+        if (paused)
+        {
+            Time.timeScale = 0f;
+            Time.fixedDeltaTime = 0f;
+            FreezeAnimators();
+            FreezeRigidbodies();
+            MaintainWorldPaused();
+            return;
+        }
+
+        RestoreRigidbodies();
+        RestoreAnimators();
+    }
+
+    void MaintainWorldPaused()
+    {
+        if (!worldPaused)
+        {
+            return;
+        }
+
+        Time.timeScale = 0f;
+        Time.fixedDeltaTime = 0f;
+        ForceAnimatorsPaused();
+        ForceRigidbodiesPaused();
+    }
+
+    void FreezeAnimators()
+    {
+        pausedAnimatorSpeeds.Clear();
+        foreach (var animator in FindObjectsByType<Animator>(FindObjectsSortMode.None))
+        {
+            if (animator == null || pausedAnimatorSpeeds.ContainsKey(animator))
+            {
+                continue;
+            }
+
+            pausedAnimatorSpeeds.Add(animator, animator.speed);
+            animator.speed = 0f;
+        }
+    }
+
+    void ForceAnimatorsPaused()
+    {
+        foreach (var animator in FindObjectsByType<Animator>(FindObjectsSortMode.None))
+        {
+            if (animator == null)
+            {
+                continue;
+            }
+
+            if (!pausedAnimatorSpeeds.ContainsKey(animator))
+            {
+                pausedAnimatorSpeeds.Add(animator, animator.speed);
+            }
+
+            animator.speed = 0f;
+        }
+    }
+
+    void RestoreAnimators()
+    {
+        foreach (var pair in pausedAnimatorSpeeds)
+        {
+            if (pair.Key != null)
+            {
+                pair.Key.speed = pair.Value;
+            }
+        }
+
+        pausedAnimatorSpeeds.Clear();
+    }
+
+    void FreezeRigidbodies()
+    {
+        pausedRigidbodies.Clear();
+        foreach (var body in FindObjectsByType<Rigidbody>(FindObjectsSortMode.None))
+        {
+            if (body == null || body.isKinematic || pausedRigidbodies.ContainsKey(body))
+            {
+                continue;
+            }
+
+            pausedRigidbodies.Add(body, new PausedRigidbodyState
+            {
+                isKinematic = body.isKinematic,
+                linearVelocity = body.linearVelocity,
+                angularVelocity = body.angularVelocity
+            });
+
+            body.linearVelocity = Vector3.zero;
+            body.angularVelocity = Vector3.zero;
+            body.isKinematic = true;
+        }
+    }
+
+    void ForceRigidbodiesPaused()
+    {
+        foreach (var body in FindObjectsByType<Rigidbody>(FindObjectsSortMode.None))
+        {
+            if (body == null)
+            {
+                continue;
+            }
+
+            if (!pausedRigidbodies.ContainsKey(body))
+            {
+                pausedRigidbodies.Add(body, new PausedRigidbodyState
+                {
+                    isKinematic = body.isKinematic,
+                    linearVelocity = body.linearVelocity,
+                    angularVelocity = body.angularVelocity
+                });
+            }
+
+            body.linearVelocity = Vector3.zero;
+            body.angularVelocity = Vector3.zero;
+            body.isKinematic = true;
+        }
+    }
+
+    void RestoreRigidbodies()
+    {
+        foreach (var pair in pausedRigidbodies)
+        {
+            var body = pair.Key;
+            if (body == null)
+            {
+                continue;
+            }
+
+            body.isKinematic = pair.Value.isKinematic;
+            if (!body.isKinematic)
+            {
+                body.linearVelocity = pair.Value.linearVelocity;
+                body.angularVelocity = pair.Value.angularVelocity;
+            }
+        }
+
+        pausedRigidbodies.Clear();
     }
 
     void RestoreNormalTime()
     {
+        worldPaused = false;
         Time.timeScale = 1f;
         if (defaultFixedDeltaTime > 0f)
         {
@@ -620,11 +854,12 @@ public class VRFootballScenarioController : MonoBehaviour
             return;
         }
 
-        football.transform.SetPositionAndRotation(snapTarget.position, snapTarget.rotation);
+        var scriptedRotation = GetScriptedBallRotation();
+        football.transform.SetPositionAndRotation(snapTarget.position, scriptedRotation);
         if (footballBody != null)
         {
             footballBody.position = snapTarget.position;
-            footballBody.rotation = quaternion.Euler(0,0,90);
+            footballBody.rotation = scriptedRotation;
 
             if (resetVelocity)
             {
@@ -746,6 +981,11 @@ public class VRFootballScenarioController : MonoBehaviour
             yield return new WaitForSecondsRealtime(delayedRunnerStartDelay);
         }
 
+        while (worldPaused)
+        {
+            yield return null;
+        }
+
         formationController.PlayDelayedRunners();
     }
 
@@ -761,17 +1001,55 @@ public class VRFootballScenarioController : MonoBehaviour
             return;
         }
 
-        football.transform.position = passOrigin.position;
-        football.transform.rotation = passOrigin.rotation;
+        SetFootballTransformAndBody(passOrigin.position, true, true);
+    }
+
+    Quaternion GetScriptedBallRotation()
+    {
+        return Quaternion.Euler(scriptedBallEulerRotation);
+    }
+
+    void SetFootballTransformAndBody(Vector3 position, bool makeKinematic, bool resetVelocity)
+    {
+        if (football == null)
+        {
+            return;
+        }
+
+        var scriptedRotation = GetScriptedBallRotation();
+        football.transform.SetPositionAndRotation(position, scriptedRotation);
 
         if (footballBody != null)
         {
-            footballBody.isKinematic = true;
-            footballBody.linearVelocity = Vector3.zero;
-            footballBody.angularVelocity = Vector3.zero;
-            footballBody.position = passOrigin.position;
-            footballBody.rotation = quaternion.Euler(0,0,90);
+            footballBody.isKinematic = makeKinematic;
+            footballBody.position = position;
+            footballBody.rotation = scriptedRotation;
+
+            if (resetVelocity)
+            {
+                footballBody.linearVelocity = Vector3.zero;
+                footballBody.angularVelocity = Vector3.zero;
+            }
         }
+    }
+
+    void MaintainScriptedBallRotation()
+    {
+        if (football == null || footballBody == null)
+        {
+            return;
+        }
+
+        var shouldHoldRotation = isPassingBall || goalThrowLaunched || queuedGoalThrow || caughtBallHolder != null || lockBallAtPassOrigin || ballHeldByUser;
+        if (!shouldHoldRotation)
+        {
+            return;
+        }
+
+        var scriptedRotation = GetScriptedBallRotation();
+        football.transform.rotation = scriptedRotation;
+        footballBody.rotation = scriptedRotation;
+        footballBody.angularVelocity = Vector3.zero;
     }
 
     void MaintainBallAtPassOrigin()
@@ -786,17 +1064,7 @@ public class VRFootballScenarioController : MonoBehaviour
             return;
         }
 
-        football.transform.position = passOrigin.position;
-        football.transform.rotation = passOrigin.rotation;
-
-        if (footballBody != null)
-        {
-            footballBody.isKinematic = true;
-            footballBody.linearVelocity = Vector3.zero;
-            footballBody.angularVelocity = Vector3.zero;
-            footballBody.position = passOrigin.position;
-            footballBody.rotation = quaternion.Euler(0,0,90);
-        }
+        SetFootballTransformAndBody(passOrigin.position, true, true);
     }
 
     void LaunchBallPass(Transform catchTarget)
@@ -820,12 +1088,14 @@ public class VRFootballScenarioController : MonoBehaviour
             launchVelocity = fallbackDirection * fallbackSpeed;
         }
 
-        football.transform.position = start;
-        football.transform.rotation = Quaternion.LookRotation((end - start).normalized, Vector3.up);
+        var scriptedRotation = GetScriptedBallRotation();
+        football.transform.SetPositionAndRotation(start, scriptedRotation);
 
         footballBody.isKinematic = false;
+        footballBody.position = start;
+        footballBody.rotation = scriptedRotation;
         footballBody.linearVelocity = launchVelocity;
-        footballBody.angularVelocity = football.transform.right * passSpinStrength;
+        footballBody.angularVelocity = Vector3.zero;
     }
 
     Transform GetPreferredCatchTarget()
@@ -1066,7 +1336,10 @@ public class VRFootballScenarioController : MonoBehaviour
             return;
         }
 
+        var scriptedRotation = GetScriptedBallRotation();
+        football.transform.rotation = scriptedRotation;
         footballBody.isKinematic = false;
+        footballBody.rotation = scriptedRotation;
         footballBody.linearVelocity = launchVelocity;
         footballBody.angularVelocity = Vector3.zero;
         closestGoalThrowDistance = DistanceToTarget(football.transform, target);
@@ -1170,15 +1443,7 @@ public class VRFootballScenarioController : MonoBehaviour
             return;
         }
 
-        football.transform.SetPositionAndRotation(holdTarget.position, holdTarget.rotation);
-        if (footballBody != null)
-        {
-            footballBody.isKinematic = true;
-            footballBody.position = holdTarget.position;
-            footballBody.rotation = quaternion.Euler(0,0,90);
-            footballBody.linearVelocity = Vector3.zero;
-            footballBody.angularVelocity = Vector3.zero;
-        }
+        SetFootballTransformAndBody(holdTarget.position, true, true);
     }
 
     float GetGoalThrowWatchRemaining(ScenarioTask task)
@@ -1422,19 +1687,7 @@ public class VRFootballScenarioController : MonoBehaviour
         var targetPosition = goalBallHoldAnchor != null
             ? goalBallHoldAnchor.position
             : caughtBallHolder.TransformPoint(goalCaughtBallLocalOffset);
-        var targetRotation = goalBallHoldAnchor != null
-            ? goalBallHoldAnchor.rotation
-            : caughtBallHolder.rotation;
-
-        football.transform.SetPositionAndRotation(targetPosition, targetRotation);
-        if (footballBody != null)
-        {
-            footballBody.isKinematic = true;
-            footballBody.position = targetPosition;
-            footballBody.rotation = quaternion.Euler(0,0,90);
-            footballBody.linearVelocity = Vector3.zero;
-            footballBody.angularVelocity = Vector3.zero;
-        }
+        SetFootballTransformAndBody(targetPosition, true, true);
     }
 
     void CompleteGoalThrow(bool stopBall)
@@ -1445,6 +1698,7 @@ public class VRFootballScenarioController : MonoBehaviour
 
         if (stopBall && footballBody != null)
         {
+            footballBody.rotation = GetScriptedBallRotation();
             footballBody.linearVelocity = Vector3.zero;
             footballBody.angularVelocity = Vector3.zero;
         }

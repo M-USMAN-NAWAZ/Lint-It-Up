@@ -419,6 +419,8 @@ public class FormationRunController : MonoBehaviour
 
             while (elapsed < duration)
             {
+                yield return WaitWhileScenarioPaused(runner);
+
                 elapsed += Time.deltaTime;
                 var t = Mathf.Clamp01(elapsed / duration);
                 var nextWaitIsZero = destinationPoint.waitAtPoint <= 0f;
@@ -1093,6 +1095,7 @@ public class FormationRunController : MonoBehaviour
             var pushElapsed = 0f;
             while (pushElapsed < pushDuration)
             {
+                yield return WaitWhileScenarioPaused(runner);
                 pushElapsed += Time.deltaTime;
                 var t = Mathf.Clamp01(pushElapsed / Mathf.Max(0.01f, pushDuration));
                 var eased = EaseOutCubic(t);
@@ -1119,6 +1122,7 @@ public class FormationRunController : MonoBehaviour
             var holdElapsed = 0f;
             while (holdElapsed < holdDuration)
             {
+                yield return WaitWhileScenarioPaused(runner);
                 holdElapsed += Time.deltaTime;
                 var t = Mathf.Clamp01(holdElapsed / Mathf.Max(0.01f, holdDuration));
                 var compress = 1f - 0.15f * Mathf.Sin(t * Mathf.PI);
@@ -1137,6 +1141,7 @@ public class FormationRunController : MonoBehaviour
             var recoilElapsed = 0f;
             while (recoilElapsed < recoilDuration)
             {
+                yield return WaitWhileScenarioPaused(runner);
                 recoilElapsed += Time.deltaTime;
                 var t = Mathf.Clamp01(recoilElapsed / Mathf.Max(0.01f, recoilDuration));
                 var eased = isTerminalPoint ? Mathf.SmoothStep(0f, 1f, t) : EaseOutBack(t);
@@ -1159,6 +1164,7 @@ public class FormationRunController : MonoBehaviour
 
         while (settleElapsed < settleDuration)
         {
+            yield return WaitWhileScenarioPaused(runner);
             settleElapsed += Time.deltaTime;
             var t = Mathf.Clamp01(settleElapsed / settleDuration);
             actor.position = Vector3.Lerp(actorStart, originalPosition, t);
@@ -1779,6 +1785,30 @@ public class FormationRunController : MonoBehaviour
         }
     }
 
+    IEnumerator WaitWhileScenarioPaused(TeamRunner runner = null)
+    {
+        if (!VRFootballScenarioController.IsWorldPaused)
+        {
+            yield break;
+        }
+
+        if (runner != null)
+        {
+            SetAnimatorPlayback(runner, false);
+            SetAnimatorSpeed(runner, 0f);
+        }
+
+        while (VRFootballScenarioController.IsWorldPaused)
+        {
+            yield return null;
+        }
+
+        if (runner != null)
+        {
+            SetAnimatorPlayback(runner, true);
+        }
+    }
+
     void SetAnimatorSpeed(TeamRunner runner, float normalizedSpeed)
     {
         if (runner.animator == null)
@@ -1799,7 +1829,7 @@ public class FormationRunController : MonoBehaviour
             return;
         }
 
-        runner.animator.speed = isPlaying ? 1f : 0f;
+        runner.animator.speed = isPlaying && !VRFootballScenarioController.IsWorldPaused ? 1f : 0f;
     }
 
     void ForceDriverLocomotion(TeamRunner runner, Vector3 worldVelocity, float normalizedSpeed)
