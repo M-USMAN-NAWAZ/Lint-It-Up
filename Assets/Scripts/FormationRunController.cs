@@ -370,8 +370,8 @@ public class FormationRunController : MonoBehaviour
         {
             SetMovingState(runner, false);
             SetAnimatorSpeed(runner, 0f);
-            SetAnimatorPlayback(runner, false);
             activeRoutines.Remove(actor);
+            ApplyRouteEndAnimation(runner, true);
             yield break;
         }
 
@@ -380,6 +380,7 @@ public class FormationRunController : MonoBehaviour
 
         var previousPointTriggeredBump = false;
         var stoppedByPointAction = false;
+        var stoppedByFallDown = false;
 
         for (var i = 0; i < runner.path.Count - 1; i++)
         {
@@ -391,7 +392,8 @@ public class FormationRunController : MonoBehaviour
 
             var useSegmentActionAnimation =
                 destinationPoint.pointAnimationType == PointAnimationType.Push ||
-                destinationPoint.pointAnimationType == PointAnimationType.HugPush;
+                destinationPoint.pointAnimationType == PointAnimationType.HugPush ||
+                destinationPoint.pointAnimationType == PointAnimationType.FallDown;
 
             if (useSegmentActionAnimation)
             {
@@ -463,18 +465,22 @@ public class FormationRunController : MonoBehaviour
                     i,
                     desiredVelocity,
                     speedRatio,
-                    useSegmentActionAnimation ? destinationPoint.pointAnimationType : PointAnimationType.None);
+                    useSegmentActionAnimation
+                        ? destinationPoint.pointAnimationType == PointAnimationType.FallDown
+                            ? PointAnimationType.Push
+                            : destinationPoint.pointAnimationType
+                        : PointAnimationType.None);
 
                 var destinationPointIndex = i + 1;
-                var usePreciseCentreFacing = ShouldUsePreciseCentreRouteFacing(runner);
-                var useDirectCentrePointFacing =
-                    usePreciseCentreFacing &&
+                var shouldAlwaysFaceNextPoint = ShouldAlwaysFaceNextPoint(runner);
+                var useDirectPointFacing =
+                    shouldAlwaysFaceNextPoint &&
                     destinationPoint.pointAnimationType != PointAnimationType.Push &&
                     destinationPoint.pointAnimationType != PointAnimationType.HugPush;
-                var shouldRotateThisSegment = usePreciseCentreFacing || destinationPointIndex > runner.openingNoRotatePointCount;
+                var shouldRotateThisSegment = shouldAlwaysFaceNextPoint || destinationPointIndex > runner.openingNoRotatePointCount;
                 if (shouldRotateThisSegment)
                 {
-                    var waypointLookDirection = useDirectCentrePointFacing
+                    var waypointLookDirection = useDirectPointFacing
                         ? GetDirectPointFacingDirection(runner, actor.position, p2)
                         : GetSegmentFacingDirection(
                             runner,
@@ -489,10 +495,10 @@ public class FormationRunController : MonoBehaviour
                             recoveryStartPosition);
                     if (waypointLookDirection.sqrMagnitude > 0.0001f)
                     {
-                        var targetRotation = useDirectCentrePointFacing
+                        var targetRotation = useDirectPointFacing
                             ? Quaternion.LookRotation(waypointLookDirection.normalized, Vector3.up)
                             : GetBankedRotation(actor.rotation, waypointLookDirection.normalized, runner, speedRatio);
-                        var rotationSmoothness = usePreciseCentreFacing
+                        var rotationSmoothness = shouldAlwaysFaceNextPoint
                             ? Mathf.Max(runner.rotationSmoothness, 28f)
                             : runner.rotationSmoothness;
                         actor.rotation = Quaternion.Slerp(actor.rotation, targetRotation, 1f - Mathf.Exp(-rotationSmoothness * Time.deltaTime));
@@ -534,6 +540,7 @@ public class FormationRunController : MonoBehaviour
                 if (shouldStopPath)
                 {
                     stoppedByPointAction = true;
+                    stoppedByFallDown = destinationPoint.pointAnimationType == PointAnimationType.FallDown;
                     break;
                 }
             }
@@ -556,6 +563,13 @@ public class FormationRunController : MonoBehaviour
         activeRoutines.Remove(actor);
         SetMovingState(runner, false);
         SetAnimatorSpeed(runner, 0f);
+
+        if (stoppedByFallDown)
+        {
+            SetAnimatorPlayback(runner, true);
+            yield break;
+        }
+
         ApplyRouteEndAnimation(runner, !stoppedByPointAction);
     }
 
@@ -888,9 +902,12 @@ public class FormationRunController : MonoBehaviour
                 ApplyLocomotionAnimation(runner, false, -1);
                 if (driver != null)
                 {
-                    driver.ClearActionStates();
+                    driver.ClearAllStates();
                     driver.SetFallDown(true);
+                    driver.SetHasBall(runner.runtimeHasBall);
                     driver.ApplyStates();
+                    driver.RefreshAnimatorImmediate();
+                    ForceAnimatorState(runner, "FallDown", 0f);
                 }
                 shouldStopPath = true;
                 if (duration > 0f)
@@ -923,6 +940,10 @@ public class FormationRunController : MonoBehaviour
             else if (point.pointAnimationType == PointAnimationType.HugPush)
             {
                 driver.SetHugPush(true);
+            }
+            else if (point.pointAnimationType == PointAnimationType.FallDown)
+            {
+                driver.SetPush(true);
             }
         }
 
@@ -1602,11 +1623,15 @@ public class FormationRunController : MonoBehaviour
             return null;
         }
 
+        if (runner.animator == null)
+        {
+            runner.animator = runner.actor.GetComponent<Animator>();
+        }
+
         runner.animationDriver = runner.actor.GetComponent<FootballAnimationStateDriver>();
         if (runner.animationDriver == null)
         {
-            var actorAnimator = runner.actor.GetComponent<Animator>();
-            if (actorAnimator != null)
+            if (runner.animator != null)
             {
                 runner.animationDriver = runner.actor.gameObject.AddComponent<FootballAnimationStateDriver>();
             }
@@ -1752,6 +1777,12 @@ public class FormationRunController : MonoBehaviour
         driver.SetIdle(playIdle);
         driver.ApplyStates();
 
+        if (playIdle)
+        {
+            driver.RefreshAnimatorImmediate();
+            ForceAnimatorState(runner, "Idle", 0f);
+        }
+
         SetAnimatorPlayback(runner, playIdle);
     }
 
@@ -1782,6 +1813,10 @@ public class FormationRunController : MonoBehaviour
         else if (activeSegmentAction == PointAnimationType.HugPush)
         {
             driver.SetHugPush(true);
+        }
+        else if (activeSegmentAction == PointAnimationType.FallDown)
+        {
+            driver.SetPush(true);
         }
     }
 
@@ -1882,7 +1917,7 @@ public class FormationRunController : MonoBehaviour
 
     void DesyncCentreAnimatorPhase(TeamRunner runner)
     {
-        if (!ShouldUsePreciseCentreRouteFacing(runner) || runner.animator == null)
+        if (!ShouldAlwaysFaceNextPoint(runner) || runner.animator == null)
         {
             return;
         }
@@ -1910,7 +1945,7 @@ public class FormationRunController : MonoBehaviour
         }
     }
 
-    static bool ShouldUsePreciseCentreRouteFacing(TeamRunner runner)
+    static bool ShouldAlwaysFaceNextPoint(TeamRunner runner)
     {
         if (runner == null || string.IsNullOrWhiteSpace(runner.playerName))
         {
@@ -1923,7 +1958,10 @@ public class FormationRunController : MonoBehaviour
                name.Equals("Centre 3", System.StringComparison.OrdinalIgnoreCase) ||
                name.Equals("Center 1", System.StringComparison.OrdinalIgnoreCase) ||
                name.Equals("Center 2", System.StringComparison.OrdinalIgnoreCase) ||
-               name.Equals("Center 3", System.StringComparison.OrdinalIgnoreCase);
+               name.Equals("Center 3", System.StringComparison.OrdinalIgnoreCase) ||
+               name.Equals("Left Defend", System.StringComparison.OrdinalIgnoreCase) ||
+               name.Equals("Fake", System.StringComparison.OrdinalIgnoreCase) ||
+               name.Equals("Faker", System.StringComparison.OrdinalIgnoreCase);
     }
 
     bool ShouldUseOpeningCrouch(TeamRunner runner)

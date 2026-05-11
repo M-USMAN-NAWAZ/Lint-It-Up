@@ -185,7 +185,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Running
-  m_Speed: 0.5
+  m_Speed: -0.5
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: 4930127176665360972}
@@ -200,7 +200,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: 7400000, guid: b086d7e456c159541a59176672607d63, type: 2}
+  m_Motion: {fileID: 7400000, guid: b2dda411e63a7e64ab1ad83aa617a0a5, type: 2}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 
@@ -738,7 +738,7 @@ AnimatorController:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: FootballPlayer 1
+  m_Name: NothingToDo
   serializedVersion: 5
   m_AnimatorParameters:
   - m_Name: Idle
@@ -1257,7 +1257,7 @@ AnimatorStateMachine:
     m_Position: {x: 250, y: 310, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 9074686254192223327}
-    m_Position: {x: 440, y: 100, z: 0}
+    m_Position: {x: 490, y: 100, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 7170573845071591577}
     m_Position: {x: -90, y: 0, z: 0}
