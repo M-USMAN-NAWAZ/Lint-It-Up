@@ -52,6 +52,7 @@ public class VRFootballScenarioController : MonoBehaviour
 
     [Header("Ball Orientation")]
     [SerializeField] Vector3 scriptedBallEulerRotation = new Vector3(0f, 0f, 90f);
+    [SerializeField] Vector3 scriptedBallEulerRotationForThrow = new Vector3(0f, 90f, 0f);
 
     [Header("Goal Throw")]
     [SerializeField] float throwDirectionAcceptanceDot = 0.55f;
@@ -493,7 +494,7 @@ public class VRFootballScenarioController : MonoBehaviour
         var elapsed = 0f;
         var duration = Mathf.Max(0.1f, task.taskDuration);
         yield return PauseBeforeTaskInstruction(task, duration);
-
+        
         if (task.taskType == ScenarioTaskType.CatchBall)
         {
             yield return StartCatchBallSequence(task);
@@ -511,7 +512,7 @@ public class VRFootballScenarioController : MonoBehaviour
 
             if (EvaluateTask(task))
             {
-                yield return PauseAfterTaskCompletion(task);
+                //yield return PauseAfterTaskCompletion(task);
 
                 if (scenarioUI != null)
                 {
@@ -1009,6 +1010,11 @@ public class VRFootballScenarioController : MonoBehaviour
         return Quaternion.Euler(scriptedBallEulerRotation);
     }
 
+    Quaternion GetScriptedBallRotationForThrow()
+    {
+        return Quaternion.Euler(scriptedBallEulerRotationForThrow);
+    }
+
     void SetFootballTransformAndBody(Vector3 position, bool makeKinematic, bool resetVelocity)
     {
         if (football == null)
@@ -1088,7 +1094,7 @@ public class VRFootballScenarioController : MonoBehaviour
             launchVelocity = fallbackDirection * fallbackSpeed;
         }
 
-        var scriptedRotation = GetScriptedBallRotation();
+        var scriptedRotation = GetScriptedBallRotationForThrow();
         football.transform.SetPositionAndRotation(start, scriptedRotation);
 
         footballBody.isKinematic = false;
@@ -1336,7 +1342,7 @@ public class VRFootballScenarioController : MonoBehaviour
             return;
         }
 
-        var scriptedRotation = GetScriptedBallRotation();
+        var scriptedRotation = GetScriptedBallRotationForThrow();
         football.transform.rotation = scriptedRotation;
         footballBody.isKinematic = false;
         footballBody.rotation = scriptedRotation;
