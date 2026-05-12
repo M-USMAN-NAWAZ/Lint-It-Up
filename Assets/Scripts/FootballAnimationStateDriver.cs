@@ -46,8 +46,10 @@ public class FootballAnimationStateDriver : MonoBehaviour
     [SerializeField] bool sideWalk;
     [SerializeField] bool hasBall;
     [SerializeField] bool applyStatesEveryFrame = true;
+    [SerializeField] bool logBoolChanges = true;
 
     readonly Dictionary<string, bool> boolParameterCache = new Dictionary<string, bool>();
+    readonly Dictionary<string, bool> lastAppliedBoolStates = new Dictionary<string, bool>();
 
     public Animator Animator => animator;
 
@@ -201,10 +203,7 @@ public class FootballAnimationStateDriver : MonoBehaviour
         idle = false;
         running = isMoving && !useSideWalk;
         
-        if (isMoving && running)
-        {
-            Debug.Log("Runing true");
-        }
+        
 
         sideWalk = useSideWalk;
         ballGrabRunning = false;
@@ -380,10 +379,12 @@ public class FootballAnimationStateDriver : MonoBehaviour
     void CacheParameters()
     {
         boolParameterCache.Clear();
+        lastAppliedBoolStates.Clear();
 
         foreach (var parameterName in s_BoolParameters)
         {
             boolParameterCache[parameterName] = false;
+            lastAppliedBoolStates[parameterName] = false;
         }
 
         foreach (var parameter in animator.parameters)
@@ -400,6 +401,22 @@ public class FootballAnimationStateDriver : MonoBehaviour
         if (!boolParameterCache.TryGetValue(parameterName, out var exists) || !exists)
         {
             return;
+        }
+
+        if (!lastAppliedBoolStates.TryGetValue(parameterName, out var previousValue))
+        {
+            previousValue = animator.GetBool(parameterName);
+            lastAppliedBoolStates[parameterName] = previousValue;
+        }
+
+        if (previousValue != value)
+        {
+            if (logBoolChanges)
+            {
+                Debug.Log($"[{name}] Animator bool '{parameterName}' -> {value}", this);
+            }
+
+            lastAppliedBoolStates[parameterName] = value;
         }
 
         animator.SetBool(parameterName, value);

@@ -1,0 +1,332 @@
+fileFormatVersion: 2
+guid: a7251bcd965668b49a6332db4bb40f68
+ModelImporter:
+  serializedVersion: 22200
+  internalIDToNameTable: []
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: GT_P10
+    second: {fileID: 2100000, guid: a502b46e5dc6a0a41aaef5f0311a527b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: GT_P14
+    second: {fileID: 2100000, guid: 4c9ca20512b70ab4cb9f3684d79cc24c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: GT_P22
+    second: {fileID: 2100000, guid: 3b1807d7096c144488b37f06772de896, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: GT_P36
+    second: {fileID: 2100000, guid: 5ae5d6646dfbb35418db2c1056f62b26, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: GT_P61
+    second: {fileID: 2100000, guid: ab10d91a04f044f4f96f2f29404500f7, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: GT_P67
+    second: {fileID: 2100000, guid: f3b3dac385609b54bb240ae3b103b4d9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: GT_P72
+    second: {fileID: 2100000, guid: 00710ed90a35e634ea97de0c29a2107a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: GT_P75
+    second: {fileID: 2100000, guid: 6f13baa9f0ce92c4c99a1f7785362f5b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: GT_P76
+    second: {fileID: 2100000, guid: 582027d4520b2664799be4e9a11e1358, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: GT_P81
+    second: {fileID: 2100000, guid: 9388e0b860ea26d4e94b825ce904cedf, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: GT_P88
+    second: {fileID: 2100000, guid: cbfeac53d3f2fd1438f3603e45945703, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WT_P0.001
+    second: {fileID: 2100000, guid: 0253c28fd0a3a1840beba77f0e8dcea8, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WT_P07
+    second: {fileID: 2100000, guid: b9be85c5c9fb68a4ba3eb4a512400d94, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WT_P14
+    second: {fileID: 2100000, guid: 2437915d26b628d44abc29c8cd9c77a1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WT_P21
+    second: {fileID: 2100000, guid: 2f33260829747d548befdec02fbb3991, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WT_P31
+    second: {fileID: 2100000, guid: 9694edfe355c3f740b7a6acf31939cc7, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WT_P33
+    second: {fileID: 2100000, guid: 9d77c3f41827cd14da449c121cdf925f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WT_P48
+    second: {fileID: 2100000, guid: bdc13239a31637d4b8627dd38a74a531, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WT_P51.001
+    second: {fileID: 2100000, guid: 59fb5fd866eac3944a53e81a1e816076, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WT_P590
+    second: {fileID: 2100000, guid: c2ba52cfc35be9747b0ca9f1f139b84f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WT_P95
+    second: {fileID: 2100000, guid: 1d5dddd473e91d349b60e5e5e1892a4d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WT_P97
+    second: {fileID: 2100000, guid: a49b29ba45c95de44a08417438af43c2, type: 2}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Coffee (11)
+    second: {fileID: 2800000, guid: e0f294a26c8098341a8a15545a235aa7, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Coffee (13)
+    second: {fileID: 2800000, guid: 49d3c59e175885b49a85a180eed60e6a, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Coffee (15)
+    second: {fileID: 2800000, guid: 29e9886a286307948aaca304615ea451, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Coffee (17)
+    second: {fileID: 2800000, guid: 37515873a06898b498a3f56011c0a3a2, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Coffee (18)
+    second: {fileID: 2800000, guid: 756e83ed63e2633439123e324597782b, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Coffee (22)
+    second: {fileID: 2800000, guid: 233ce0762a8c00c4e89928669583bba4, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Coffee (23)
+    second: {fileID: 2800000, guid: 8c023fd5465708845b31f008b29cb8d8, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Coffee (24)
+    second: {fileID: 2800000, guid: 64ab35030bcd7564582db98ce1fe3f3c, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Coffee (26)
+    second: {fileID: 2800000, guid: ac3c850f326e03442939a74fe67b699e, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Coffee (27)
+    second: {fileID: 2800000, guid: 132a7eb683e1bed418ed22737b01e254, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Coffee (6)
+    second: {fileID: 2800000, guid: dcf39535aa761fc4a8bb3cc4fed23eef, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Coffee (8)
+    second: {fileID: 2800000, guid: 7ee701162700f4a4e8b70f652713683c, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Coffee (9)
+    second: {fileID: 2800000, guid: 608d2f2541c78ce4bad75cd5db84dc1a, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: GT_P36_B
+    second: {fileID: 2800000, guid: 8c8bd6c16102d694a8e79e0243eac9ab, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: GT_P72_B
+    second: {fileID: 2800000, guid: 59aa31937581dfe4d908f1a783af5caa, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: GT_P88_B
+    second: {fileID: 2800000, guid: 11d6a57059146c643bdad8eb962da9d6, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: PlayerNormal
+    second: {fileID: 2800000, guid: db8e1f21b7d212349a8e1126add6d80a, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: WT_P07_B
+    second: {fileID: 2800000, guid: aa6909264ce598648a2d092c238bdf19, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: WT_P33_Asia
+    second: {fileID: 2800000, guid: 48a1231f297bc504c9ef6fb8951b79e1, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: WT_P48_B
+    second: {fileID: 2800000, guid: f0a6c170e425011429f922ad4ee007e5, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: WT_P51_Asia
+    second: {fileID: 2800000, guid: f897cdae9aa6d47418359a8ae53488e2, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: WT_P90_B
+    second: {fileID: 2800000, guid: 029d056f9f4a138429c2c75a7e2950bb, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: WT_P97_Asian
+    second: {fileID: 2800000, guid: cc9b2d788701118449281d09c7b601c1, type: 3}
+  materials:
+    materialImportMode: 2
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    removeConstantScaleCurves: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 0
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
+    importPhysicalCameras: 1
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    nodeNameCollisionStrategy: 1
+    fileIdsGeneration: 2
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    keepQuads: 0
+    weldVertices: 1
+    bakeAxisConversion: 0
+    preserveHierarchy: 0
+    skinWeightsMode: 0
+    maxBonesPerVertex: 4
+    minBoneWeight: 0.001
+    optimizeBones: 1
+    meshOptimizationFlags: -1
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVMarginMethod: 1
+    secondaryUVMinLightmapResolution: 40
+    secondaryUVMinObjectScale: 1
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+    strictVertexDataChecks: 0
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+  referencedClips: []
+  importAnimation: 1
+  humanDescription:
+    serializedVersion: 3
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    globalScale: 1
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  autoGenerateAvatarMappingIfUnspecified: 1
+  animationType: 2
+  humanoidOversampling: 1
+  avatarSetup: 0
+  addHumanoidExtraRootOnlyWhenUsingAvatar: 1
+  importBlendShapeDeformPercent: 1
+  remapMaterialsIfMaterialImportModeIsNone: 0
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

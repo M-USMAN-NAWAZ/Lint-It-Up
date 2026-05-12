@@ -69,6 +69,8 @@ public class VRFootballScenarioController : MonoBehaviour
     [SerializeField] Transform goalBallHoldAnchor;
     [SerializeField] float goalReceiverReadyRadius = 1.5f;
     [SerializeField] float goalCatchDistance = 2f;
+    [SerializeField] float goalCatchAnimationLeadDistance = 2.75f;
+    [SerializeField] float goalCatchBallSnapDelay = 0.12f;
     [SerializeField] float goalCatchHoldDuration = 1.2f;
     [SerializeField] Vector3 goalCaughtBallLocalOffset = new Vector3(0f, 1.1f, 0.35f);
 
@@ -120,6 +122,7 @@ public class VRFootballScenarioController : MonoBehaviour
     Rigidbody footballBody;
     Transform selectedBallHand;
     Transform caughtBallHolder;
+    Transform pendingGoalCatchHoldTarget;
     Transform queuedGoalThrowHoldTarget;
     string earlyFailureMessage = string.Empty;
     Coroutine goalThrowReleaseRoutine;
@@ -828,6 +831,7 @@ public class VRFootballScenarioController : MonoBehaviour
         isPassingBall = false;
         ballHeldByUser = true;
         caughtBallHolder = null;
+        pendingGoalCatchHoldTarget = null;
         selectedBallHand = ResolveHandForInteractor(args.interactorObject);
         SnapFootballToSelectingHand(args.interactorObject);
     }
@@ -1052,7 +1056,9 @@ public class VRFootballScenarioController : MonoBehaviour
             return;
         }
 
-        var scriptedRotation = GetScriptedBallRotation();
+        var scriptedRotation = (isPassingBall || goalThrowLaunched)
+            ? GetScriptedBallRotationForThrow()
+            : GetScriptedBallRotation();
         football.transform.rotation = scriptedRotation;
         footballBody.rotation = scriptedRotation;
         footballBody.angularVelocity = Vector3.zero;
@@ -1609,10 +1615,30 @@ public class VRFootballScenarioController : MonoBehaviour
         ResolveGoalReceiver();
         if (goalReceiver != null && IsGoalReceiverReady(task))
         {
-            return goalBallHoldAnchor != null ? goalBallHoldAnchor : goalReceiver;
+            return GetGoalCatchHoldTarget(task);
         }
 
         return task != null ? task.target : null;
+    }
+
+    Transform GetGoalCatchHoldTarget(ScenarioTask task = null)
+    {
+        if (goalBallHoldAnchor != null)
+        {
+            return goalBallHoldAnchor;
+        }
+
+        if (task == null && currentTaskIndex >= 0 && currentTaskIndex < tasks.Count)
+        {
+            task = tasks[currentTaskIndex];
+        }
+
+        if (task != null && task.target != null)
+        {
+            return task.target;
+        }
+
+        return goalReceiver;
     }
 
     bool IsFootballNearGoalReceiver()
@@ -1623,8 +1649,8 @@ public class VRFootballScenarioController : MonoBehaviour
             return false;
         }
 
-        var catchTarget = goalBallHoldAnchor != null ? goalBallHoldAnchor : goalReceiver;
-        return catchTarget != null && Vector3.Distance(football.transform.position, catchTarget.position) <= Mathf.Max(0.1f, goalCatchDistance);
+        var catchTarget = GetGoalCatchHoldTarget();
+        return catchTarget != null && Vector3.Distance(football.transform.position, catchTarget.position) <= Mathf.Max(0.1f, goalCatchAnimationLeadDistance);
     }
 
     void TriggerGoalCatch()
@@ -1636,8 +1662,7 @@ public class VRFootballScenarioController : MonoBehaviour
 
         ResolveGoalReceiver();
         goalCatchTriggered = true;
-        caughtBallHolder = goalBallHoldAnchor != null ? goalBallHoldAnchor : goalReceiver;
-        HoldFootballAtGoalReceiver();
+        pendingGoalCatchHoldTarget = GetGoalCatchHoldTarget();
 
         if (goalCatchRoutine != null)
         {
@@ -1651,6 +1676,8 @@ public class VRFootballScenarioController : MonoBehaviour
     IEnumerator PlayGoalCatchRoutine()
     {
         var driver = goalReceiver != null ? goalReceiver.GetComponent<FootballAnimationStateDriver>() : null;
+        RotateGoalReceiverTowardFootball();
+
         if (driver != null)
         {
             if (driver.Animator != null)
@@ -1666,6 +1693,15 @@ public class VRFootballScenarioController : MonoBehaviour
             driver.RefreshAnimatorImmediate();
         }
 
+        var snapDelay = Mathf.Max(0f, goalCatchBallSnapDelay);
+        if (snapDelay > 0f)
+        {
+            yield return new WaitForSecondsRealtime(snapDelay);
+        }
+
+        caughtBallHolder = pendingGoalCatchHoldTarget != null ? pendingGoalCatchHoldTarget : GetGoalCatchHoldTarget();
+        HoldFootballAtGoalReceiver();
+
         var duration = Mathf.Max(0f, goalCatchHoldDuration);
         if (duration > 0f)
         {
@@ -1680,19 +1716,38 @@ public class VRFootballScenarioController : MonoBehaviour
             driver.RefreshAnimatorImmediate();
         }
 
+        pendingGoalCatchHoldTarget = null;
         goalCatchRoutine = null;
     }
 
-    void HoldFootballAtGoalReceiver()
+    void RotateGoalReceiverTowardFootball()
     {
-        if (football == null || caughtBallHolder == null)
+        if (goalReceiver == null || football == null)
         {
             return;
         }
 
-        var targetPosition = goalBallHoldAnchor != null
-            ? goalBallHoldAnchor.position
-            : caughtBallHolder.TransformPoint(goalCaughtBallLocalOffset);
+        var lookDirection = football.transform.position - goalReceiver.position;
+        lookDirection = Vector3.ProjectOnPlane(lookDirection, Vector3.up);
+        if (lookDirection.sqrMagnitude <= 0.0001f)
+        {
+            return;
+        }
+
+        goalReceiver.rotation = Quaternion.LookRotation(lookDirection.normalized, Vector3.up);
+    }
+
+    void HoldFootballAtGoalReceiver()
+    {
+        var holdTarget = caughtBallHolder != null ? caughtBallHolder : pendingGoalCatchHoldTarget;
+        if (football == null || holdTarget == null)
+        {
+            return;
+        }
+
+        var targetPosition = holdTarget == goalReceiver
+            ? holdTarget.TransformPoint(goalCaughtBallLocalOffset)
+            : holdTarget.position;
         SetFootballTransformAndBody(targetPosition, true, true);
     }
 
