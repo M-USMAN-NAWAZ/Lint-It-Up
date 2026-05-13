@@ -346,12 +346,12 @@ MonoBehaviour:
   taskDescriptionText: {fileID: 1661187775}
   taskHintText: {fileID: 0}
   taskTimerText: {fileID: 990165484}
-  resumeButton: {fileID: 171743227}
-  autoCreateResumeButtonIfMissing: 1
+  resumeButton: {fileID: 0}
+  autoCreateResumeButtonIfMissing: 0
   resumeButtonText: Resume
   resumeTitleText: {fileID: 0}
   resumeDescriptionText: {fileID: 0}
-  resumeHintText: {fileID: 1624511807}
+  resumeHintText: {fileID: 0}
   failTitleText: {fileID: 333984653}
   failDescriptionText: {fileID: 2061784930}
   successTitleText: {fileID: 0}
@@ -2809,7 +2809,7 @@ MonoBehaviour:
     - pointName: Point (6)
       point: {fileID: 1235691175}
       spaceMode: 0
-      segmentDuration: 1.9
+      segmentDuration: 1.5
       waitAtPoint: 0
       triggerOnReach: 
       pointAnimationType: 0
@@ -2934,7 +2934,7 @@ MonoBehaviour:
     - pointName: Point (10)
       point: {fileID: 67825952}
       spaceMode: 0
-      segmentDuration: 1.6
+      segmentDuration: 1
       waitAtPoint: 0
       triggerOnReach: 
       pointAnimationType: 0
@@ -2957,7 +2957,7 @@ MonoBehaviour:
     - pointName: Point (108)
       point: {fileID: 884610625}
       spaceMode: 0
-      segmentDuration: 1.6
+      segmentDuration: 1
       waitAtPoint: 0.4
       triggerOnReach: 
       pointAnimationType: 0
@@ -2980,7 +2980,7 @@ MonoBehaviour:
     - pointName: Point (11)
       point: {fileID: 638978872}
       spaceMode: 0
-      segmentDuration: 1.6
+      segmentDuration: 1
       waitAtPoint: 0
       triggerOnReach: 
       pointAnimationType: 0
@@ -3003,7 +3003,7 @@ MonoBehaviour:
     - pointName: Point (12)
       point: {fileID: 1665888028}
       spaceMode: 0
-      segmentDuration: 1.7
+      segmentDuration: 1
       waitAtPoint: 0
       triggerOnReach: 
       pointAnimationType: 0
@@ -3026,7 +3026,7 @@ MonoBehaviour:
     - pointName: Point (13)
       point: {fileID: 1109733149}
       spaceMode: 0
-      segmentDuration: 1.7
+      segmentDuration: 1
       waitAtPoint: 0
       triggerOnReach: 
       pointAnimationType: 0
@@ -3049,7 +3049,7 @@ MonoBehaviour:
     - pointName: Point (14)
       point: {fileID: 1514078267}
       spaceMode: 0
-      segmentDuration: 1.7
+      segmentDuration: 1
       waitAtPoint: 0
       triggerOnReach: 
       pointAnimationType: 0
@@ -3151,7 +3151,7 @@ MonoBehaviour:
     - pointName: Point (16)
       point: {fileID: 754548299}
       spaceMode: 0
-      segmentDuration: 1.6
+      segmentDuration: 0.7
       waitAtPoint: 0
       triggerOnReach: 
       pointAnimationType: 0
@@ -3539,7 +3539,7 @@ MonoBehaviour:
     - pointName: Point (55)
       point: {fileID: 1298493062}
       spaceMode: 0
-      segmentDuration: 1.85
+      segmentDuration: 0.5
       waitAtPoint: 0
       triggerOnReach: 
       pointAnimationType: 0
@@ -3687,7 +3687,7 @@ MonoBehaviour:
     - pointName: Point (65)
       point: {fileID: 753230737}
       spaceMode: 0
-      segmentDuration: 1.95
+      segmentDuration: 1.5
       waitAtPoint: 0
       triggerOnReach: 
       pointAnimationType: 0
@@ -3812,7 +3812,7 @@ MonoBehaviour:
     - pointName: Point (69)
       point: {fileID: 799435851}
       spaceMode: 0
-      segmentDuration: 1.6
+      segmentDuration: 0.5
       waitAtPoint: 0
       triggerOnReach: 
       pointAnimationType: 0
@@ -3983,7 +3983,7 @@ MonoBehaviour:
     - pointName: Point (99)
       point: {fileID: 1469982482}
       spaceMode: 0
-      segmentDuration: 1.5
+      segmentDuration: 0.3
       waitAtPoint: 0
       triggerOnReach: 
       pointAnimationType: 0
@@ -4154,7 +4154,7 @@ MonoBehaviour:
     - pointName: Point (111)
       point: {fileID: 220288192}
       spaceMode: 0
-      segmentDuration: 1.5
+      segmentDuration: 0.5
       waitAtPoint: 0
       triggerOnReach: 
       pointAnimationType: 0
@@ -4349,7 +4349,7 @@ MonoBehaviour:
     - pointName: Point (19)
       point: {fileID: 494346253}
       spaceMode: 0
-      segmentDuration: 1.6
+      segmentDuration: 0.7
       waitAtPoint: 0
       triggerOnReach: 
       pointAnimationType: 0
@@ -4520,7 +4520,7 @@ MonoBehaviour:
     - pointName: Point (30)
       point: {fileID: 1204658911}
       spaceMode: 0
-      segmentDuration: 1.85
+      segmentDuration: 1.5
       waitAtPoint: 0
       triggerOnReach: 
       pointAnimationType: 0
@@ -5112,7 +5112,7 @@ MonoBehaviour:
     - pointName: Point (86)
       point: {fileID: 794236187}
       spaceMode: 0
-      segmentDuration: 1.5
+      segmentDuration: 1
       waitAtPoint: 0
       triggerOnReach: 
       pointAnimationType: 0
@@ -5283,7 +5283,7 @@ MonoBehaviour:
     - pointName: Point (92)
       point: {fileID: 848464965}
       spaceMode: 0
-      segmentDuration: 1
+      segmentDuration: 0.7
       waitAtPoint: 0
       triggerOnReach: 
       pointAnimationType: 0
@@ -5329,7 +5329,7 @@ MonoBehaviour:
     - pointName: Point (94)
       point: {fileID: 1108649084}
       spaceMode: 0
-      segmentDuration: 1.5
+      segmentDuration: 1
       waitAtPoint: 0
       triggerOnReach: 
       pointAnimationType: 0
@@ -5352,7 +5352,7 @@ MonoBehaviour:
     - pointName: Point (95)
       point: {fileID: 1571901970}
       spaceMode: 0
-      segmentDuration: 1.5
+      segmentDuration: 0.7
       waitAtPoint: 0
       triggerOnReach: 
       pointAnimationType: 0
@@ -5375,7 +5375,7 @@ MonoBehaviour:
     - pointName: Point (96)
       point: {fileID: 996578249}
       spaceMode: 0
-      segmentDuration: 1.5
+      segmentDuration: 0.7
       waitAtPoint: 0
       triggerOnReach: 
       pointAnimationType: 0
@@ -5477,7 +5477,7 @@ MonoBehaviour:
     - pointName: Point (60)
       point: {fileID: 155989250}
       spaceMode: 0
-      segmentDuration: 1.6
+      segmentDuration: 0.5
       waitAtPoint: 0
       triggerOnReach: 
       pointAnimationType: 0
@@ -5625,7 +5625,7 @@ MonoBehaviour:
     - pointName: Point (75)
       point: {fileID: 888200076}
       spaceMode: 0
-      segmentDuration: 1.6
+      segmentDuration: 0.5
       waitAtPoint: 0
       triggerOnReach: 
       pointAnimationType: 0
@@ -5796,7 +5796,7 @@ MonoBehaviour:
     - pointName: Point (107)
       point: {fileID: 321766626}
       spaceMode: 0
-      segmentDuration: 1.5
+      segmentDuration: 1
       waitAtPoint: 0.4
       triggerOnReach: 
       pointAnimationType: 0
@@ -5819,7 +5819,7 @@ MonoBehaviour:
     - pointName: Point (104)
       point: {fileID: 724920140}
       spaceMode: 0
-      segmentDuration: 1.5
+      segmentDuration: 0.7
       waitAtPoint: 0
       triggerOnReach: 
       pointAnimationType: 0
@@ -5842,7 +5842,7 @@ MonoBehaviour:
     - pointName: Point (105)
       point: {fileID: 1588843556}
       spaceMode: 0
-      segmentDuration: 1.5
+      segmentDuration: 0.7
       waitAtPoint: 0
       triggerOnReach: 
       pointAnimationType: 0
@@ -5865,7 +5865,7 @@ MonoBehaviour:
     - pointName: Point (106)
       point: {fileID: 331415992}
       spaceMode: 0
-      segmentDuration: 1.5
+      segmentDuration: 0.5
       waitAtPoint: 0
       triggerOnReach: 
       pointAnimationType: 0
@@ -5967,7 +5967,7 @@ MonoBehaviour:
     - pointName: Point (118)
       point: {fileID: 439680116}
       spaceMode: 0
-      segmentDuration: 1.5
+      segmentDuration: 0.5
       waitAtPoint: 0
       triggerOnReach: 
       pointAnimationType: 0
@@ -7366,7 +7366,7 @@ Transform:
   m_GameObject: {fileID: 67825951}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.23, y: 1.02, z: 25.09}
+  m_LocalPosition: {x: 1.32, y: 1.02, z: 23.42}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -11823,7 +11823,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &171743226
 RectTransform:
   m_ObjectHideFlags: 0
@@ -20878,7 +20878,7 @@ Transform:
   m_GameObject: {fileID: 405080198}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
-  m_LocalPosition: {x: 1.2299995, y: 1.02, z: 25.09}
+  m_LocalPosition: {x: 1.3199996, y: 1.02, z: 23.42}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -20896,7 +20896,7 @@ Animator:
   m_GameObject: {fileID: 405080198}
   m_Enabled: 1
   m_Avatar: {fileID: 9000000, guid: 79f8be8f2107c9c4194270674d9e7b12, type: 3}
-  m_Controller: {fileID: 9100000, guid: 8afce54536ac0784c90d46855b7dfff5, type: 2}
+  m_Controller: {fileID: 9100000, guid: 70be151776da94c49b76a05229a0be95, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -42272,7 +42272,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &832575518
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -45087,7 +45087,7 @@ Transform:
   m_GameObject: {fileID: 884610624}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.23, y: 1.02, z: 25.09}
+  m_LocalPosition: {x: 1.32, y: 1.02, z: 23.42}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -78885,7 +78885,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 810019319561094050, guid: d6878e1999eb4b44a9f5a263af86c185, type: 3}
       propertyPath: m_MoveSpeed
-      value: 2
+      value: 4.5
       objectReference: {fileID: 0}
     - target: {fileID: 1253868401696766737, guid: d6878e1999eb4b44a9f5a263af86c185, type: 3}
       propertyPath: m_IsActive
@@ -87251,7 +87251,7 @@ MonoBehaviour:
   passOrigin: {fileID: 946849722}
   passStartDelay: 2
   delayedRunnerStartDelay: 1.5
-  passTravelTime: 0.65
+  passTravelTime: 2
   passArc:
     serializedVersion: 2
     m_Curve:
@@ -87276,7 +87276,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  passArcHeight: 0.3
+  passArcHeight: 1
   keepCountdownVisibleUntilBallToss: 0
   scriptedBallEulerRotation: {x: 0, y: 0, z: 90}
   scriptedBallEulerRotationForThrow: {x: 0, y: 90, z: 0}

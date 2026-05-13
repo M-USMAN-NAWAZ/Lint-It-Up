@@ -496,7 +496,7 @@ public class VRFootballScenarioController : MonoBehaviour
 
         var elapsed = 0f;
         var duration = Mathf.Max(0.1f, task.taskDuration);
-        yield return PauseBeforeTaskInstruction(task, duration);
+        //yield return PauseBeforeTaskInstruction(task, duration);
         
         if (task.taskType == ScenarioTaskType.CatchBall)
         {
