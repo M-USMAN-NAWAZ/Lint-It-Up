@@ -47,9 +47,14 @@ public class FootballAnimationStateDriver : MonoBehaviour
     [SerializeField] bool hasBall;
     [SerializeField] bool applyStatesEveryFrame = true;
     [SerializeField] bool logBoolChanges = true;
+    [SerializeField] bool drivePushLayerWeight = true;
+    [SerializeField] string pushLayerName = "Push";
+    [SerializeField] float pushLayerActiveWeight = 0.4f;
+    [SerializeField] float pushLayerWeightChangeSpeed = 6f;
 
     readonly Dictionary<string, bool> boolParameterCache = new Dictionary<string, bool>();
     readonly Dictionary<string, bool> lastAppliedBoolStates = new Dictionary<string, bool>();
+    int cachedPushLayerIndex = -2;
 
     public Animator Animator => animator;
 
@@ -364,6 +369,7 @@ public class FootballAnimationStateDriver : MonoBehaviour
         SetAnimatorBool(CrouchBallHoldParam, resolvedCrouchBallHold);
         SetAnimatorBool(SideWalkParam, resolvedSideWalk);
         SetAnimatorBool(HasBallParam, resolvedHasBall);
+        ApplyPushLayerWeight(resolvedPush || resolvedHugPush);
     }
 
     public void RefreshAnimatorImmediate()
@@ -420,5 +426,60 @@ public class FootballAnimationStateDriver : MonoBehaviour
         }
 
         animator.SetBool(parameterName, value);
+    }
+
+    void ApplyPushLayerWeight(bool pushIsActive)
+    {
+        if (!drivePushLayerWeight)
+        {
+            return;
+        }
+
+        var pushLayerIndex = ResolvePushLayerIndex();
+        if (pushLayerIndex < 0)
+        {
+            return;
+        }
+
+        var targetWeight = pushIsActive ? pushLayerActiveWeight : 0f;
+        var currentWeight = animator.GetLayerWeight(pushLayerIndex);
+        var nextWeight = Mathf.MoveTowards(
+            currentWeight,
+            targetWeight,
+            pushLayerWeightChangeSpeed * Time.deltaTime);
+
+        animator.SetLayerWeight(pushLayerIndex, nextWeight);
+    }
+
+    int ResolvePushLayerIndex()
+    {
+        if (animator == null)
+        {
+            return -1;
+        }
+
+        if (cachedPushLayerIndex >= -1)
+        {
+            return cachedPushLayerIndex;
+        }
+
+        cachedPushLayerIndex = -1;
+
+        if (animator.layerCount > 1 && animator.GetLayerName(1) == pushLayerName)
+        {
+            cachedPushLayerIndex = 1;
+            return cachedPushLayerIndex;
+        }
+
+        for (var layerIndex = 0; layerIndex < animator.layerCount; layerIndex++)
+        {
+            if (animator.GetLayerName(layerIndex) == pushLayerName)
+            {
+                cachedPushLayerIndex = layerIndex;
+                break;
+            }
+        }
+
+        return cachedPushLayerIndex;
     }
 }

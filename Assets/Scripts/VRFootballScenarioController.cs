@@ -53,6 +53,8 @@ public class VRFootballScenarioController : MonoBehaviour
     [Header("Ball Orientation")]
     [SerializeField] Vector3 scriptedBallEulerRotation = new Vector3(0f, 0f, 90f);
     [SerializeField] Vector3 scriptedBallEulerRotationForThrow = new Vector3(0f, 90f, 0f);
+    [SerializeField] Vector3 userHeldBallLocalOffset = new Vector3(0f, 0f, -0.08f);
+    [SerializeField] Vector3 rightHandHeldBallEulerRotation = new Vector3(0f, 0f, -90f);
 
     [Header("Goal Throw")]
     [SerializeField] float throwDirectionAcceptanceDot = 0.55f;
@@ -299,7 +301,7 @@ public class VRFootballScenarioController : MonoBehaviour
 
         if (ballHeldByUser && football != null && football.isSelected && selectedBallHand != null)
         {
-            SnapFootballToTransform(selectedBallHand, false);
+            SnapFootballToTransform(selectedBallHand, false, userHeldBallLocalOffset);
         }
 
         if (caughtBallHolder != null)
@@ -849,21 +851,24 @@ public class VRFootballScenarioController : MonoBehaviour
                 ? interactor.GetAttachTransform(football)
                 : null;
 
-        SnapFootballToTransform(snapTarget, true);
+        SnapFootballToTransform(snapTarget, true, userHeldBallLocalOffset);
     }
 
-    void SnapFootballToTransform(Transform snapTarget, bool resetVelocity)
+    void SnapFootballToTransform(Transform snapTarget, bool resetVelocity, Vector3 localOffset = default)
     {
         if (football == null || snapTarget == null)
         {
             return;
         }
 
-        var scriptedRotation = GetScriptedBallRotation();
-        football.transform.SetPositionAndRotation(snapTarget.position, scriptedRotation);
+        var scriptedRotation = ballHeldByUser
+            ? GetHeldBallRotation(snapTarget)
+            : GetScriptedBallRotation();
+        var targetPosition = snapTarget.TransformPoint(localOffset);
+        football.transform.SetPositionAndRotation(targetPosition, scriptedRotation);
         if (footballBody != null)
         {
-            footballBody.position = snapTarget.position;
+            footballBody.position = targetPosition;
             footballBody.rotation = scriptedRotation;
 
             if (resetVelocity)
@@ -1056,12 +1061,27 @@ public class VRFootballScenarioController : MonoBehaviour
             return;
         }
 
-        var scriptedRotation = (isPassingBall || goalThrowLaunched)
-            ? GetScriptedBallRotationForThrow()
-            : GetScriptedBallRotation();
+        var scriptedRotation = ballHeldByUser && selectedBallHand != null
+            ? GetHeldBallRotation(selectedBallHand)
+            : (isPassingBall || goalThrowLaunched)
+                ? GetScriptedBallRotationForThrow()
+                : GetScriptedBallRotation();
         football.transform.rotation = scriptedRotation;
         footballBody.rotation = scriptedRotation;
         footballBody.angularVelocity = Vector3.zero;
+    }
+
+    Quaternion GetHeldBallRotation(Transform handTarget)
+    {
+        if (handTarget == null)
+        {
+            return GetScriptedBallRotation();
+        }
+
+        var heldRotationOffset = handTarget == rightHand
+            ? rightHandHeldBallEulerRotation
+            : scriptedBallEulerRotation;
+        return handTarget.rotation * Quaternion.Euler(heldRotationOffset);
     }
 
     void MaintainBallAtPassOrigin()

@@ -125,6 +125,9 @@ public class FormationRunController : MonoBehaviour
 
     readonly Dictionary<Transform, Coroutine> activeRoutines = new Dictionary<Transform, Coroutine>();
     readonly HashSet<Transform> bumpLockedActors = new HashSet<Transform>();
+    const string FakeLayerName = "Fake";
+    const float FakeLayerActiveWeight = 1f;
+    const float FakeLayerWeightChangeSpeed = 6f;
 
     void Start()
     {
@@ -472,7 +475,9 @@ public class FormationRunController : MonoBehaviour
                         : PointAnimationType.None);
 
                 var destinationPointIndex = i + 1;
-                var shouldAlwaysFaceNextPoint = ShouldAlwaysFaceNextPoint(runner);
+                ApplyFakeLayerWeight(runner, destinationPointIndex, interpolationT);
+                var shouldHoldOpeningRotation = ShouldHoldOpeningRotation(runner, destinationPointIndex);
+                var shouldAlwaysFaceNextPoint = ShouldAlwaysFaceNextPoint(runner) && !shouldHoldOpeningRotation;
                 var useDirectPointFacing =
                     shouldAlwaysFaceNextPoint &&
                     destinationPoint.pointAnimationType != PointAnimationType.Push &&
@@ -563,6 +568,7 @@ public class FormationRunController : MonoBehaviour
         activeRoutines.Remove(actor);
         SetMovingState(runner, false);
         SetAnimatorSpeed(runner, 0f);
+        ApplyFakeLayerWeight(runner, -1, 0f, true);
 
         if (stoppedByFallDown)
         {
@@ -1667,7 +1673,7 @@ public class FormationRunController : MonoBehaviour
         }
 
         var destinationPointIndex = segmentIndex + 1;
-        var useSideWalk = isMoving && destinationPointIndex > 0 && destinationPointIndex < runner.openingSideWalkSegmentCount;
+        var useSideWalk = ShouldUseOpeningSideWalk(runner, isMoving, destinationPointIndex);
         var useOpeningCrouch = isMoving && destinationPointIndex > 0 && destinationPointIndex < runner.openingCrouchSegmentCount;
 
         if (!isMoving)
@@ -1762,6 +1768,8 @@ public class FormationRunController : MonoBehaviour
 
     void ApplyRouteEndAnimation(TeamRunner runner, bool completedRoute)
     {
+        ApplyFakeLayerWeight(runner, -1, 0f, true);
+
         var driver = GetAnimationDriver(runner);
         if (driver == null)
         {
@@ -1961,6 +1969,102 @@ public class FormationRunController : MonoBehaviour
                name.Equals("Center 3", System.StringComparison.OrdinalIgnoreCase) ||
                name.Equals("Left Defend", System.StringComparison.OrdinalIgnoreCase) ||
                name.Equals("Fake", System.StringComparison.OrdinalIgnoreCase) ||
+               name.Equals("Faker", System.StringComparison.OrdinalIgnoreCase);
+    }
+
+    static bool ShouldHoldOpeningRotation(TeamRunner runner, int destinationPointIndex)
+    {
+        if (runner == null || string.IsNullOrWhiteSpace(runner.playerName))
+        {
+            return false;
+        }
+
+        return IsCentre2Runner(runner) && destinationPointIndex <= runner.openingNoRotatePointCount;
+    }
+
+    static bool ShouldUseOpeningSideWalk(TeamRunner runner, bool isMoving, int destinationPointIndex)
+    {
+        if (!isMoving || runner == null || destinationPointIndex <= 0)
+        {
+            return false;
+        }
+
+        if (IsCentre2Runner(runner))
+        {
+            return destinationPointIndex <= runner.openingSideWalkSegmentCount;
+        }
+
+        return destinationPointIndex < runner.openingSideWalkSegmentCount;
+    }
+
+    void ApplyFakeLayerWeight(TeamRunner runner, int destinationPointIndex, float segmentProgress = 0f, bool forceImmediate = false)
+    {
+        if (!IsFakeRunner(runner))
+        {
+            return;
+        }
+
+        if (runner.animator == null)
+        {
+            runner.animator = runner.actor != null ? runner.actor.GetComponent<Animator>() : null;
+        }
+
+        if (runner.animator == null)
+        {
+            return;
+        }
+
+        var fakeLayerIndex = runner.animator.GetLayerIndex(FakeLayerName);
+        if (fakeLayerIndex < 0)
+        {
+            return;
+        }
+
+        var targetWeight = destinationPointIndex == 2
+            ? Mathf.Lerp(0f, FakeLayerActiveWeight, Mathf.Clamp01(segmentProgress))
+            : 0f;
+        if (forceImmediate)
+        {
+            runner.animator.SetLayerWeight(fakeLayerIndex, targetWeight);
+            return;
+        }
+
+        var currentWeight = runner.animator.GetLayerWeight(fakeLayerIndex);
+        if (destinationPointIndex == 2)
+        {
+            var rampWeight = Mathf.Max(currentWeight, targetWeight);
+            runner.animator.SetLayerWeight(fakeLayerIndex, rampWeight);
+            return;
+        }
+
+        var nextWeight = Mathf.MoveTowards(
+            currentWeight,
+            targetWeight,
+            FakeLayerWeightChangeSpeed * Time.deltaTime);
+        runner.animator.SetLayerWeight(fakeLayerIndex, nextWeight);
+    }
+
+    static bool IsCentre2Runner(TeamRunner runner)
+    {
+        if (runner == null || string.IsNullOrWhiteSpace(runner.playerName))
+        {
+            return false;
+        }
+
+        var name = runner.playerName.Trim();
+        return name.Equals("Centre 2", System.StringComparison.OrdinalIgnoreCase) ||
+               name.Equals("Center 2", System.StringComparison.OrdinalIgnoreCase);
+    }
+
+    static bool IsFakeRunner(TeamRunner runner)
+    {
+        if (runner == null || string.IsNullOrWhiteSpace(runner.playerName))
+        {
+            return false;
+        }
+
+        var name = runner.playerName.Trim();
+        return name.Equals("Fake", System.StringComparison.OrdinalIgnoreCase) ||
                name.Equals("Faker", System.StringComparison.OrdinalIgnoreCase);
     }
 
