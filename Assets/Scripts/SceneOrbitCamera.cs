@@ -8,6 +8,7 @@ public class SceneOrbitCamera : MonoBehaviour
     [SerializeField] float orbitDegreesPerSecond = 8f;
     [SerializeField] bool captureCurrentOffsetOnStart;
     [SerializeField] bool useChildRendererBoundsCenter = true;
+    [SerializeField] bool rotateToFaceOrbitCenter = true;
     [SerializeField] Vector3 orbitCenterOffset;
 
     Vector3 startingOffset;
@@ -50,7 +51,24 @@ public class SceneOrbitCamera : MonoBehaviour
         var rotatedOffset = Quaternion.AngleAxis(orbitAngle, Vector3.up) * startingOffset;
         orbitCenter = ResolveOrbitCenter();
         transform.position = orbitCenter + rotatedOffset;
-        transform.LookAt(orbitCenter + lookAtOffset, Vector3.up);
+        if (rotateToFaceOrbitCenter)
+        {
+            RotateOnlyOnYAxis(orbitCenter + lookAtOffset);
+        }
+    }
+
+    void RotateOnlyOnYAxis(Vector3 lookTarget)
+    {
+        var flatDirection = lookTarget - transform.position;
+        flatDirection.y = 0f;
+        if (flatDirection.sqrMagnitude <= 0.0001f)
+        {
+            return;
+        }
+
+        var targetYaw = Quaternion.LookRotation(flatDirection.normalized, Vector3.up).eulerAngles.y;
+        var currentEuler = transform.eulerAngles;
+        transform.rotation = Quaternion.Euler(currentEuler.x, targetYaw, currentEuler.z);
     }
 
     Vector3 ResolveOrbitCenter()
