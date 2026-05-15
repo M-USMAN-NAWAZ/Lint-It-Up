@@ -419,7 +419,7 @@ public class FootballAnimationStateDriver : MonoBehaviour
         {
             if (logBoolChanges)
             {
-                Debug.Log($"[{name}] Animator bool '{parameterName}' -> {value}", this);
+                //Debug.Log($"[{name}] Animator bool '{parameterName}' -> {value}", this);
             }
 
             lastAppliedBoolStates[parameterName] = value;
