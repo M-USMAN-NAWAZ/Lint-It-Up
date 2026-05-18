@@ -38,6 +38,7 @@ public class FormationRunController : MonoBehaviour
         public SpaceMode spaceMode = SpaceMode.World;
         public float segmentDuration = 0.6f;
         public float waitAtPoint;
+        public bool waitForDeferredHutHut;
         public string triggerOnReach;
         public PointAnimationType pointAnimationType;
         public float animationHoldDuration = 0.35f;
@@ -558,6 +559,22 @@ public class FormationRunController : MonoBehaviour
                 yield return new WaitForSeconds(destinationPoint.waitAtPoint);
             }
 
+            if (destinationPoint.waitForDeferredHutHut)
+            {
+                runner.runtimeAwaitingHutHutRelease = true;
+                SetMovingState(runner, false);
+                SetAnimatorSpeed(runner, 0f);
+                ApplyLocomotionAnimation(runner, false, i);
+
+                while (runner.runtimeAwaitingHutHutRelease)
+                {
+                    yield return WaitWhileScenarioPaused(runner);
+                    yield return null;
+                }
+
+                SetMovingState(runner, true);
+            }
+
             if (useSegmentActionAnimation)
             {
                 ApplySegmentActionAnimation(runner, destinationPoint, false);
@@ -640,9 +657,29 @@ public class FormationRunController : MonoBehaviour
 
     IEnumerator PlayDeferredHutHutRoutine()
     {
-        StartCoroutine(PlayHutHut(playerTeam));
-        StartCoroutine(PlayHutHut(opponentTeam));
+        ReleaseDeferredHutHutRunners(playerTeam);
+        ReleaseDeferredHutHutRunners(opponentTeam);
+        StartCoroutine(PlayHutHut(playerTeam, true));
+        StartCoroutine(PlayHutHut(opponentTeam, true));
         yield break;
+    }
+
+    void ReleaseDeferredHutHutRunners(List<TeamRunner> team)
+    {
+        for (var i = 0; i < team.Count; i++)
+        {
+            var runner = team[i];
+            if (runner == null)
+            {
+                continue;
+            }
+
+            runner.runtimeAwaitingHutHutRelease = false;
+            if (!runner.moveBeforeHutHut)
+            {
+                runner.runtimeDelayedStartPending = false;
+            }
+        }
     }
 
     void PrepareAllRunnerStates()
@@ -1994,6 +2031,11 @@ public class FormationRunController : MonoBehaviour
             return destinationPointIndex <= runner.openingSideWalkSegmentCount;
         }
 
+        if (IsGoalRunner(runner))
+        {
+            return destinationPointIndex <= runner.openingSideWalkSegmentCount;
+        }
+
         return destinationPointIndex < runner.openingSideWalkSegmentCount;
     }
 
@@ -2066,6 +2108,18 @@ public class FormationRunController : MonoBehaviour
         var name = runner.playerName.Trim();
         return name.Equals("Fake", System.StringComparison.OrdinalIgnoreCase) ||
                name.Equals("Faker", System.StringComparison.OrdinalIgnoreCase);
+    }
+
+    static bool IsGoalRunner(TeamRunner runner)
+    {
+        if (runner == null || string.IsNullOrWhiteSpace(runner.playerName))
+        {
+            return false;
+        }
+
+        var name = runner.playerName.Trim();
+        return name.Equals("Goal", System.StringComparison.OrdinalIgnoreCase) ||
+               name.Equals("Gole", System.StringComparison.OrdinalIgnoreCase);
     }
 
     bool ShouldUseOpeningCrouch(TeamRunner runner)
