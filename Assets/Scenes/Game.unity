@@ -2831,7 +2831,7 @@ MonoBehaviour:
     - pointName: Point (6)
       point: {fileID: 1235691175}
       spaceMode: 0
-      segmentDuration: 0.8
+      segmentDuration: 0.5
       waitAtPoint: 0
       waitForDeferredHutHut: 0
       triggerOnReach: 
@@ -2855,11 +2855,11 @@ MonoBehaviour:
     - pointName: Point (7)
       point: {fileID: 87727933}
       spaceMode: 0
-      segmentDuration: 1
+      segmentDuration: 0.7
       waitAtPoint: 0
       waitForDeferredHutHut: 0
       triggerOnReach: 
-      pointAnimationType: 1
+      pointAnimationType: 0
       animationHoldDuration: 0.35
       giveRunnerBallAfterAction: 0
       stopPathAfterAction: 0
@@ -2879,7 +2879,7 @@ MonoBehaviour:
     - pointName: Point (8)
       point: {fileID: 212799186}
       spaceMode: 0
-      segmentDuration: 1.85
+      segmentDuration: 1
       waitAtPoint: 0
       waitForDeferredHutHut: 0
       triggerOnReach: 
@@ -2903,7 +2903,7 @@ MonoBehaviour:
     - pointName: Point (9)
       point: {fileID: 52956633}
       spaceMode: 0
-      segmentDuration: 1.85
+      segmentDuration: 1.5
       waitAtPoint: 0
       waitForDeferredHutHut: 0
       triggerOnReach: 
@@ -4247,7 +4247,7 @@ MonoBehaviour:
     - pointName: Point (112)
       point: {fileID: 1968399497}
       spaceMode: 0
-      segmentDuration: 1.5
+      segmentDuration: 1
       waitAtPoint: 0
       waitForDeferredHutHut: 0
       triggerOnReach: 
@@ -4271,7 +4271,7 @@ MonoBehaviour:
     - pointName: Point (113)
       point: {fileID: 188601594}
       spaceMode: 0
-      segmentDuration: 1.5
+      segmentDuration: 1
       waitAtPoint: 0
       waitForDeferredHutHut: 0
       triggerOnReach: 
@@ -4579,7 +4579,7 @@ MonoBehaviour:
       point: {fileID: 1272493975}
       spaceMode: 0
       segmentDuration: 0.6
-      waitAtPoint: 0.4
+      waitAtPoint: 0.2
       waitForDeferredHutHut: 0
       triggerOnReach: 
       pointAnimationType: 0
@@ -4602,7 +4602,7 @@ MonoBehaviour:
     - pointName: Point (30)
       point: {fileID: 1204658911}
       spaceMode: 0
-      segmentDuration: 0.8
+      segmentDuration: 0.6
       waitAtPoint: 0
       waitForDeferredHutHut: 0
       triggerOnReach: 
@@ -4626,11 +4626,11 @@ MonoBehaviour:
     - pointName: Point (31)
       point: {fileID: 1475935697}
       spaceMode: 0
-      segmentDuration: 1
+      segmentDuration: 0.9
       waitAtPoint: 0
       waitForDeferredHutHut: 0
       triggerOnReach: 
-      pointAnimationType: 1
+      pointAnimationType: 0
       animationHoldDuration: 0.35
       giveRunnerBallAfterAction: 0
       stopPathAfterAction: 0
@@ -4650,7 +4650,7 @@ MonoBehaviour:
     - pointName: Point (32)
       point: {fileID: 133839611}
       spaceMode: 0
-      segmentDuration: 1.85
+      segmentDuration: 1
       waitAtPoint: 0
       waitForDeferredHutHut: 0
       triggerOnReach: 
@@ -4674,7 +4674,7 @@ MonoBehaviour:
     - pointName: Point (33)
       point: {fileID: 810678922}
       spaceMode: 0
-      segmentDuration: 1.85
+      segmentDuration: 1.5
       waitAtPoint: 0
       waitForDeferredHutHut: 0
       triggerOnReach: 
@@ -6195,7 +6195,7 @@ MonoBehaviour:
     - pointName: Point (119)
       point: {fileID: 667047974}
       spaceMode: 0
-      segmentDuration: 1.5
+      segmentDuration: 1
       waitAtPoint: 0
       waitForDeferredHutHut: 0
       triggerOnReach: 
@@ -6219,7 +6219,7 @@ MonoBehaviour:
     - pointName: Point (120)
       point: {fileID: 1912113759}
       spaceMode: 0
-      segmentDuration: 1.5
+      segmentDuration: 1
       waitAtPoint: 0
       waitForDeferredHutHut: 0
       triggerOnReach: 
@@ -7303,7 +7303,7 @@ Transform:
   m_GameObject: {fileID: 66026665}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -2.785, y: 1.02, z: 15.839}
+  m_LocalPosition: {x: -2.8820002, y: 1.02, z: 16.116001}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -10766,7 +10766,7 @@ Transform:
   m_GameObject: {fileID: 130274579}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1.513, y: 1.02, z: 11.411}
+  m_LocalPosition: {x: -1.9200001, y: 1.02, z: 12.927}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -12955,7 +12955,7 @@ Transform:
   m_GameObject: {fileID: 188601593}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.646, y: 1.02, z: 9.878}
+  m_LocalPosition: {x: -0.574, y: 1.02, z: 10.816}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -21366,7 +21366,7 @@ Transform:
   m_GameObject: {fileID: 399852485}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -2.573, y: 1.02, z: 15.153}
+  m_LocalPosition: {x: -2.67, y: 1.02, z: 15.43}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -28130,7 +28130,7 @@ Transform:
   m_GameObject: {fileID: 544010845}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.19, y: 0, z: 16.244}
+  m_LocalPosition: {x: 1.57, y: 0, z: 13.89}
   m_LocalScale: {x: 3, y: 3, z: 3}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -35026,7 +35026,7 @@ Transform:
   m_GameObject: {fileID: 667047973}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.87, y: 1.02, z: 7.51}
+  m_LocalPosition: {x: 1.87, y: 1.02, z: 8.699}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -55188,7 +55188,7 @@ Transform:
   m_GameObject: {fileID: 1048956867}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1.783, y: 1.02, z: 12.344}
+  m_LocalPosition: {x: -2.19, y: 1.02, z: 13.86}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -89889,7 +89889,7 @@ Transform:
   m_GameObject: {fileID: 1912113758}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.259, y: 1.02, z: 9.318}
+  m_LocalPosition: {x: -0.187, y: 1.02, z: 10.256}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -90962,7 +90962,7 @@ MonoBehaviour:
   goalCatchHoldDuration: 1.2
   goalCaughtBallLocalOffset: {x: 0, y: 1.1, z: 0.35}
   autoStartOnPlay: 1
-  disablePlayerControllerTasks: 1
+  disablePlayerControllerTasks: 0
   startFormationFromScenario: 1
   startPlayerTeam: 1
   startOpponentTeam: 1
@@ -90971,7 +90971,7 @@ MonoBehaviour:
   interTaskDelay: 0.15
   failureScreenDuration: 1.5
   previewObjectivesDuringFormationTest: 1
-  formationTestObjectiveTimeScale: 0.45
+  formationTestObjectiveTimeScale: 0.7
   pauseBeforeEachTaskInstruction: 1
   pauseAfterEachCompletedTask: 1
   resumeTitle: Point Complete
@@ -92469,7 +92469,7 @@ Transform:
   m_GameObject: {fileID: 1968399496}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.118, y: 1.02, z: 7.951}
+  m_LocalPosition: {x: 1.118, y: 1.02, z: 9.14}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

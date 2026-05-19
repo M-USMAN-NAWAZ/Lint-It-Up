@@ -5,6 +5,6 @@ public class SceneChange : MonoBehaviour
 {
     public void GoToOffenceField()
     {
-        SceneManager.LoadSceneAsync("Game");
+        SceneManager.LoadSceneAsync("Game 1");
     }
 }
