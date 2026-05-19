@@ -86,6 +86,8 @@ public class VRFootballScenarioController : MonoBehaviour
     [SerializeField] float countdownSecondsPerStep = 1f;
     [SerializeField] float interTaskDelay = 0.15f;
     [SerializeField] float failureScreenDuration = 1.5f;
+    [SerializeField] bool previewObjectivesDuringFormationTest = true;
+    [SerializeField] float formationTestObjectiveTimeScale = 0.35f;
 
     [Header("Point Pause")]
     [SerializeField] bool pauseBeforeEachTaskInstruction = true;
@@ -129,6 +131,7 @@ public class VRFootballScenarioController : MonoBehaviour
     string earlyFailureMessage = string.Empty;
     Coroutine goalThrowReleaseRoutine;
     Coroutine goalCatchRoutine;
+    Coroutine formationTestObjectivePreviewRoutine;
     readonly Dictionary<Animator, float> pausedAnimatorSpeeds = new Dictionary<Animator, float>();
     static bool worldPaused;
     readonly Dictionary<Rigidbody, PausedRigidbodyState> pausedRigidbodies = new Dictionary<Rigidbody, PausedRigidbodyState>();
@@ -386,7 +389,76 @@ public class VRFootballScenarioController : MonoBehaviour
             LaunchBallPass(catchTarget);
         }
 
+        if (previewObjectivesDuringFormationTest)
+        {
+            formationTestObjectivePreviewRoutine = StartCoroutine(PreviewFormationTestObjectives());
+        }
+
+        if (formationTestObjectivePreviewRoutine != null)
+        {
+            yield return formationTestObjectivePreviewRoutine;
+            formationTestObjectivePreviewRoutine = null;
+        }
+
+        UpdateObjectiveIndicator(null, false);
+
         scenarioRunning = false;
+    }
+
+    IEnumerator PreviewFormationTestObjectives()
+    {
+        if (objectiveIndicator == null || tasks.Count == 0)
+        {
+            yield break;
+        }
+
+        var firstTarget = GetFormationTestIndicatorTarget(tasks[0]);
+        if (firstTarget == null)
+        {
+            yield break;
+        }
+
+        UpdateObjectiveIndicator(firstTarget, true);
+
+        if (tasks[0].taskType == ScenarioTaskType.CatchBall)
+        {
+            var catchPhaseDuration = Mathf.Max(0.05f, passTravelTime * GetFormationTestObjectiveTimeScale());
+            yield return new WaitForSecondsRealtime(catchPhaseDuration);
+        }
+
+        for (var i = 1; i < tasks.Count; i++)
+        {
+            var task = tasks[i];
+            var taskTarget = GetFormationTestIndicatorTarget(task);
+            if (taskTarget == null)
+            {
+                continue;
+            }
+
+            UpdateObjectiveIndicator(taskTarget, true);
+            var holdDuration = Mathf.Max(0.05f, task.taskDuration * GetFormationTestObjectiveTimeScale());
+            yield return new WaitForSecondsRealtime(holdDuration);
+        }
+    }
+
+    float GetFormationTestObjectiveTimeScale()
+    {
+        return Mathf.Max(0.05f, formationTestObjectiveTimeScale);
+    }
+
+    Transform GetFormationTestIndicatorTarget(ScenarioTask task)
+    {
+        if (task == null)
+        {
+            return null;
+        }
+
+        if (task.taskType == ScenarioTaskType.CatchBall)
+        {
+            return ballCatchTarget != null ? ballCatchTarget : GetPreferredCatchTarget();
+        }
+
+        return GetTaskIndicatorTarget(task);
     }
 
     IEnumerator RunScenario()

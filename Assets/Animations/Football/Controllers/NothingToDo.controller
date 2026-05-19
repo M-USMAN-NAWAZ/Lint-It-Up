@@ -160,7 +160,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Running
-  m_Speed: -0.5
+  m_Speed: -1
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: 4930127176665360972}
@@ -1348,7 +1348,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: SideWalk
-  m_Speed: 1
+  m_Speed: -1
   m_CycleOffset: 0
   m_Transitions: []
   m_StateMachineBehaviours: []
@@ -1360,7 +1360,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: 7400000, guid: e91f0239774598d439028d97667d3933, type: 2}
+  m_Motion: {fileID: 7400000, guid: b2dda411e63a7e64ab1ad83aa617a0a5, type: 2}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 
