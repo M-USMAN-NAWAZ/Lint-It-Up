@@ -14,6 +14,7 @@ public class SceneOrbitCamera : MonoBehaviour
     Vector3 startingOffset;
     float orbitAngle;
     Vector3 orbitCenter;
+    bool orbitPaused;
 
     void Start()
     {
@@ -37,13 +38,22 @@ public class SceneOrbitCamera : MonoBehaviour
 
     void LateUpdate()
     {
-        if (orbitTarget == null)
+        if (orbitTarget == null || orbitPaused)
         {
             return;
         }
 
         orbitAngle += orbitDegreesPerSecond * Time.deltaTime;
         UpdateCameraPose();
+    }
+
+    public void SetOrbitPaused(bool paused)
+    {
+        orbitPaused = paused;
+        if (!orbitPaused && orbitTarget != null)
+        {
+            UpdateCameraPose();
+        }
     }
 
     void UpdateCameraPose()

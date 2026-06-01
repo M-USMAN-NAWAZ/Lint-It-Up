@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.XR;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
@@ -55,6 +56,14 @@ public class VRFootballScenarioController : MonoBehaviour
     [SerializeField] Vector3 scriptedBallEulerRotationForThrow = new Vector3(0f, 90f, 0f);
     [SerializeField] Vector3 userHeldBallLocalOffset = new Vector3(0f, 0f, -0.08f);
     [SerializeField] Vector3 rightHandHeldBallEulerRotation = new Vector3(0f, 0f, -90f);
+
+    [Header("Auto Catch Zone")]
+    [SerializeField] Collider autoCatchZone;
+    [SerializeField] XRBaseInteractor leftHandGrabInteractor;
+    [SerializeField] XRBaseInteractor rightHandGrabInteractor;
+    [SerializeField] float autoCatchInsideTolerance = 0.03f;
+    [SerializeField] bool requireBothHandsInAutoCatchZoneToStart = true;
+    [SerializeField] float twoHandAutoCatchMaxHandDistance = 0.45f;
 
     [Header("Goal Throw")]
     [SerializeField] float throwDirectionAcceptanceDot = 0.55f;
@@ -125,6 +134,7 @@ public class VRFootballScenarioController : MonoBehaviour
     float goalThrowWatchUntilTime;
     Rigidbody footballBody;
     Transform selectedBallHand;
+    IXRSelectInteractor activeSelectingInteractor;
     Transform caughtBallHolder;
     Transform pendingGoalCatchHoldTarget;
     Transform queuedGoalThrowHoldTarget;
@@ -132,6 +142,18 @@ public class VRFootballScenarioController : MonoBehaviour
     Coroutine goalThrowReleaseRoutine;
     Coroutine goalCatchRoutine;
     Coroutine formationTestObjectivePreviewRoutine;
+    XRInteractionManager xrInteractionManager;
+    bool autoCaughtUsingTrigger;
+    XRNode autoCaughtTriggerHand = XRNode.LeftHand;
+    bool hasPreviousAutoCatchHandPositions;
+    Vector3 previousLeftAutoCatchHandPosition;
+    Vector3 previousRightAutoCatchHandPosition;
+    bool hasAutoCatchBallVelocity;
+    Vector3 previousAutoCatchBallPosition;
+    float previousAutoCatchBallTime;
+    Vector3 autoCatchBallVelocity;
+    bool hasPendingAutoCatchReleaseVelocity;
+    Vector3 pendingAutoCatchReleaseVelocity;
     readonly Dictionary<Animator, float> pausedAnimatorSpeeds = new Dictionary<Animator, float>();
     static bool worldPaused;
     readonly Dictionary<Rigidbody, PausedRigidbodyState> pausedRigidbodies = new Dictionary<Rigidbody, PausedRigidbodyState>();
@@ -251,6 +273,10 @@ public class VRFootballScenarioController : MonoBehaviour
     {
         defaultFixedDeltaTime = Time.fixedDeltaTime;
         footballBody = football != null ? football.GetComponent<Rigidbody>() : null;
+        xrInteractionManager = football != null && football.interactionManager != null
+            ? football.interactionManager
+            : FindObjectOfType<XRInteractionManager>();
+        ResolveAutoCatchInteractors();
         if (football != null)
         {
             football.useDynamicAttach = false;
@@ -280,6 +306,8 @@ public class VRFootballScenarioController : MonoBehaviour
 
         MaintainBallAtPassOrigin();
         UpdateGoalThrowState();
+        TryAutoCatchBallInZone();
+        TryReleaseAutoCaughtBallFromTrigger();
         UpdateThrowTrajectoryLine();
     }
 
@@ -302,7 +330,11 @@ public class VRFootballScenarioController : MonoBehaviour
             return;
         }
 
-        if (ballHeldByUser && football != null && football.isSelected && selectedBallHand != null)
+        if (autoCaughtUsingTrigger && ballHeldByUser && football != null && football.isSelected)
+        {
+            MaintainAutoCaughtBallWithHands();
+        }
+        else if (ballHeldByUser && football != null && football.isSelected && selectedBallHand != null)
         {
             SnapFootballToTransform(selectedBallHand, false, userHeldBallLocalOffset);
         }
@@ -349,6 +381,8 @@ public class VRFootballScenarioController : MonoBehaviour
         {
             formationController.PrepareOpeningPose();
         }
+
+        yield return WaitForStartGestureInAutoCatchZone();
 
         for (var count = countdownStart; count >= 1; count--)
         {
@@ -482,6 +516,8 @@ public class VRFootballScenarioController : MonoBehaviour
             formationController.PrepareOpeningPose();
         }
 
+        yield return WaitForStartGestureInAutoCatchZone();
+
         for (var count = countdownStart; count >= 1; count--)
         {
             if (scenarioUI != null)
@@ -564,6 +600,7 @@ public class VRFootballScenarioController : MonoBehaviour
             yield break;
         }
 
+        UpdateAutoCatchZoneState(task);
         UpdateObjectiveIndicator(GetTaskIndicatorTarget(task), true);
         UpdateHandObjectiveIndicator(GetHandIndicatorTarget(task), true);
         UpdateThrowTrajectoryLine();
@@ -906,6 +943,7 @@ public class VRFootballScenarioController : MonoBehaviour
         ballHeldByUser = true;
         caughtBallHolder = null;
         pendingGoalCatchHoldTarget = null;
+        activeSelectingInteractor = args.interactorObject;
         selectedBallHand = ResolveHandForInteractor(args.interactorObject);
         SnapFootballToSelectingHand(args.interactorObject);
     }
@@ -974,13 +1012,395 @@ public class VRFootballScenarioController : MonoBehaviour
         return leftDistance <= rightDistance ? leftHand : rightHand;
     }
 
+    void ResolveAutoCatchInteractors()
+    {
+        if (leftHandGrabInteractor == null)
+        {
+            leftHandGrabInteractor = ResolveGrabInteractorForHand(leftHand);
+        }
+
+        if (rightHandGrabInteractor == null)
+        {
+            rightHandGrabInteractor = ResolveGrabInteractorForHand(rightHand);
+        }
+    }
+
+    XRBaseInteractor ResolveGrabInteractorForHand(Transform handRoot)
+    {
+        if (handRoot == null)
+        {
+            return null;
+        }
+
+        var interactors = handRoot.GetComponentsInChildren<XRBaseInteractor>(true);
+        for (var i = 0; i < interactors.Length; i++)
+        {
+            var interactor = interactors[i];
+            if (interactor != null && interactor.name.IndexOf("Direct Interactor", System.StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return interactor;
+            }
+        }
+
+        return interactors.Length > 0 ? interactors[0] : null;
+    }
+
+    void TryAutoCatchBallInZone()
+    {
+        if (!isPassingBall ||
+            ballHeldByUser ||
+            football == null ||
+            football.isSelected ||
+            autoCatchZone == null ||
+            xrInteractionManager == null)
+        {
+            return;
+        }
+
+        var leftReady = IsAutoCatchHandReady(leftHand, XRNode.LeftHand);
+        var rightReady = IsAutoCatchHandReady(rightHand, XRNode.RightHand);
+
+        if (leftReady && rightReady)
+        {
+            TryAutoCatchWithHand(GetPreferredAutoCatchInteractor(), XRNode.LeftHand);
+            return;
+        }
+
+        if (leftReady)
+        {
+            TryAutoCatchWithHand(leftHandGrabInteractor, XRNode.LeftHand);
+            return;
+        }
+
+        if (rightReady)
+        {
+            TryAutoCatchWithHand(rightHandGrabInteractor, XRNode.RightHand);
+        }
+    }
+
+    bool TryAutoCatchWithHand(XRBaseInteractor interactor, XRNode xrNode)
+    {
+        if (interactor == null)
+        {
+            return false;
+        }
+
+        autoCaughtUsingTrigger = true;
+        hasPreviousAutoCatchHandPositions = false;
+        ResetAutoCatchVelocityTracking();
+        autoCaughtTriggerHand = xrNode;
+        xrInteractionManager.SelectEnter((IXRSelectInteractor)interactor, (IXRSelectInteractable)football);
+        MaintainAutoCaughtBallWithHands();
+        return true;
+    }
+
+    XRBaseInteractor GetPreferredAutoCatchInteractor()
+    {
+        if (leftHandGrabInteractor != null)
+        {
+            return leftHandGrabInteractor;
+        }
+
+        return rightHandGrabInteractor;
+    }
+
+    bool IsAutoCatchHandReady(Transform hand, XRNode xrNode)
+    {
+        return hand != null &&
+               IsHandInsideAutoCatchZone(hand.position) &&
+               IsControllerTriggerPressed(xrNode);
+    }
+
+    void MaintainAutoCaughtBallWithHands()
+    {
+        var leftPressed = IsControllerTriggerPressed(XRNode.LeftHand);
+        var rightPressed = IsControllerTriggerPressed(XRNode.RightHand);
+        var leftAvailable = leftHand != null && leftPressed;
+        var rightAvailable = rightHand != null && rightPressed;
+
+        if (!leftAvailable && !rightAvailable)
+        {
+            return;
+        }
+
+        if (!hasPreviousAutoCatchHandPositions)
+        {
+            StoreAutoCatchHandPositions();
+        }
+
+        if (leftAvailable && rightAvailable && AreHandsCloseEnoughForTwoHandCatch())
+        {
+            SnapFootballBetweenHands();
+            StoreAutoCatchHandPositions();
+            return;
+        }
+
+        selectedBallHand = GetSingleAutoCatchHand(leftAvailable, rightAvailable);
+        if (selectedBallHand != null)
+        {
+            autoCaughtTriggerHand = selectedBallHand == rightHand ? XRNode.RightHand : XRNode.LeftHand;
+            SnapFootballToTransform(selectedBallHand, false, userHeldBallLocalOffset);
+            RecordAutoCatchBallVelocity(football.transform.position);
+        }
+
+        StoreAutoCatchHandPositions();
+    }
+
+    bool AreHandsCloseEnoughForTwoHandCatch()
+    {
+        if (leftHand == null || rightHand == null)
+        {
+            return false;
+        }
+
+        var maxDistance = Mathf.Max(0.01f, twoHandAutoCatchMaxHandDistance);
+        return (leftHand.position - rightHand.position).sqrMagnitude <= maxDistance * maxDistance;
+    }
+
+    Transform GetSingleAutoCatchHand(bool leftAvailable, bool rightAvailable)
+    {
+        if (leftAvailable && !rightAvailable)
+        {
+            return leftHand;
+        }
+
+        if (rightAvailable && !leftAvailable)
+        {
+            return rightHand;
+        }
+
+        var leastMovedHand = GetLeastMovedAutoCatchHand();
+        if (leastMovedHand != null)
+        {
+            return leastMovedHand;
+        }
+
+        if (football == null)
+        {
+            return selectedBallHand != null ? selectedBallHand : leftHand;
+        }
+
+        var leftDistance = leftHand != null ? (football.transform.position - leftHand.position).sqrMagnitude : float.MaxValue;
+        var rightDistance = rightHand != null ? (football.transform.position - rightHand.position).sqrMagnitude : float.MaxValue;
+        return leftDistance <= rightDistance ? leftHand : rightHand;
+    }
+
+    Transform GetLeastMovedAutoCatchHand()
+    {
+        if (!hasPreviousAutoCatchHandPositions || leftHand == null || rightHand == null)
+        {
+            return null;
+        }
+
+        var leftMovement = (leftHand.position - previousLeftAutoCatchHandPosition).sqrMagnitude;
+        var rightMovement = (rightHand.position - previousRightAutoCatchHandPosition).sqrMagnitude;
+        if (Mathf.Abs(leftMovement - rightMovement) <= 0.0001f)
+        {
+            return null;
+        }
+
+        return leftMovement < rightMovement ? leftHand : rightHand;
+    }
+
+    void StoreAutoCatchHandPositions()
+    {
+        if (leftHand == null || rightHand == null)
+        {
+            return;
+        }
+
+        previousLeftAutoCatchHandPosition = leftHand.position;
+        previousRightAutoCatchHandPosition = rightHand.position;
+        hasPreviousAutoCatchHandPositions = true;
+    }
+
+    void SnapFootballBetweenHands()
+    {
+        if (football == null || leftHand == null || rightHand == null)
+        {
+            return;
+        }
+
+        selectedBallHand = GetSingleAutoCatchHand(true, true);
+        var leftHoldPoint = leftHand.TransformPoint(userHeldBallLocalOffset);
+        var rightHoldPoint = rightHand.TransformPoint(userHeldBallLocalOffset);
+        var midpoint = Vector3.Lerp(leftHoldPoint, rightHoldPoint, 0.5f);
+        var targetRotation = Quaternion.Slerp(
+            leftHand.rotation * Quaternion.Euler(scriptedBallEulerRotation),
+            rightHand.rotation * Quaternion.Euler(rightHandHeldBallEulerRotation),
+            0.5f);
+
+        football.transform.SetPositionAndRotation(midpoint, targetRotation);
+        if (footballBody != null)
+        {
+            footballBody.position = midpoint;
+            footballBody.rotation = targetRotation;
+            footballBody.linearVelocity = Vector3.zero;
+            footballBody.angularVelocity = Vector3.zero;
+        }
+
+        RecordAutoCatchBallVelocity(midpoint);
+    }
+
+    void RecordAutoCatchBallVelocity(Vector3 currentPosition)
+    {
+        var currentTime = Time.unscaledTime;
+        if (hasAutoCatchBallVelocity)
+        {
+            var deltaTime = currentTime - previousAutoCatchBallTime;
+            if (deltaTime > 0.0001f)
+            {
+                var measuredVelocity = (currentPosition - previousAutoCatchBallPosition) / deltaTime;
+                autoCatchBallVelocity = Vector3.Lerp(autoCatchBallVelocity, measuredVelocity, 0.75f);
+            }
+        }
+        else
+        {
+            autoCatchBallVelocity = Vector3.zero;
+            hasAutoCatchBallVelocity = true;
+        }
+
+        previousAutoCatchBallPosition = currentPosition;
+        previousAutoCatchBallTime = currentTime;
+    }
+
+    Vector3 GetAutoCatchReleaseVelocity()
+    {
+        if (hasAutoCatchBallVelocity && autoCatchBallVelocity.sqrMagnitude > 0.0001f)
+        {
+            return autoCatchBallVelocity;
+        }
+
+        var fallbackHand = selectedBallHand != null ? selectedBallHand : GetPreferredCatchTarget();
+        return fallbackHand != null ? fallbackHand.forward * Mathf.Max(minimumThrowSpeed, 1f) : Vector3.zero;
+    }
+
+    void ResetAutoCatchVelocityTracking()
+    {
+        hasAutoCatchBallVelocity = false;
+        autoCatchBallVelocity = Vector3.zero;
+        hasPendingAutoCatchReleaseVelocity = false;
+        pendingAutoCatchReleaseVelocity = Vector3.zero;
+    }
+
+    IEnumerator WaitForStartGestureInAutoCatchZone()
+    {
+        if (!requireBothHandsInAutoCatchZoneToStart || autoCatchZone == null)
+        {
+            yield break;
+        }
+
+        SetAutoCatchZoneActive(true);
+        while (!AreBothHandsReadyToStart())
+        {
+            yield return null;
+        }
+    }
+
+    bool AreBothHandsReadyToStart()
+    {
+        return leftHand != null &&
+               rightHand != null &&
+               IsHandInsideAutoCatchZone(leftHand.position) &&
+               IsHandInsideAutoCatchZone(rightHand.position) &&
+               IsControllerTriggerPressed(XRNode.LeftHand) &&
+               IsControllerTriggerPressed(XRNode.RightHand);
+    }
+
+    bool IsHandInsideAutoCatchZone(Vector3 handPosition)
+    {
+        if (autoCatchZone == null)
+        {
+            return false;
+        }
+
+        var closestPoint = autoCatchZone.ClosestPoint(handPosition);
+        if ((closestPoint - handPosition).sqrMagnitude <= autoCatchInsideTolerance * autoCatchInsideTolerance)
+        {
+            return true;
+        }
+
+        return autoCatchZone.bounds.Contains(handPosition);
+    }
+
+    static bool IsControllerTriggerPressed(XRNode xrNode)
+    {
+        var device = InputDevices.GetDeviceAtXRNode(xrNode);
+        if (!device.isValid)
+        {
+            return false;
+        }
+
+        if (device.TryGetFeatureValue(CommonUsages.triggerButton, out var isPressed) && isPressed)
+        {
+            return true;
+        }
+
+        return device.TryGetFeatureValue(CommonUsages.trigger, out var triggerValue) && triggerValue >= 0.65f;
+    }
+
+    void TryReleaseAutoCaughtBallFromTrigger()
+    {
+        if (!autoCaughtUsingTrigger ||
+            !ballHeldByUser ||
+            football == null ||
+            !football.isSelected ||
+            xrInteractionManager == null ||
+            activeSelectingInteractor == null)
+        {
+            return;
+        }
+
+        var leftPressed = IsControllerTriggerPressed(XRNode.LeftHand);
+        var rightPressed = IsControllerTriggerPressed(XRNode.RightHand);
+        if (leftPressed || rightPressed)
+        {
+            MaintainAutoCaughtBallWithHands();
+            return;
+        }
+
+        autoCaughtUsingTrigger = false;
+        hasPreviousAutoCatchHandPositions = false;
+        pendingAutoCatchReleaseVelocity = GetAutoCatchReleaseVelocity();
+        hasPendingAutoCatchReleaseVelocity = true;
+        if (footballBody != null)
+        {
+            footballBody.isKinematic = false;
+            footballBody.linearVelocity = pendingAutoCatchReleaseVelocity;
+        }
+
+        xrInteractionManager.SelectExit(activeSelectingInteractor, (IXRSelectInteractable)football);
+    }
+
     void OnBallSelectExited(SelectExitEventArgs args)
     {
+        if (TryTransferAutoCatchSelection(args.interactorObject))
+        {
+            return;
+        }
+
+        if (autoCaughtUsingTrigger && !hasPendingAutoCatchReleaseVelocity)
+        {
+            pendingAutoCatchReleaseVelocity = GetAutoCatchReleaseVelocity();
+            hasPendingAutoCatchReleaseVelocity = true;
+            if (footballBody != null)
+            {
+                footballBody.isKinematic = false;
+                footballBody.linearVelocity = pendingAutoCatchReleaseVelocity;
+            }
+        }
+
         var releasedFromHand = selectedBallHand;
         ballHeldByUser = false;
         selectedBallHand = null;
+        activeSelectingInteractor = null;
+        autoCaughtUsingTrigger = false;
+        hasPreviousAutoCatchHandPositions = false;
 
-        if (currentTaskIndex >= 0 && currentTaskIndex < tasks.Count && tasks[currentTaskIndex].taskType == ScenarioTaskType.ThrowBallToTarget)
+        var isGoalThrowTask = currentTaskIndex >= 0 &&
+                              currentTaskIndex < tasks.Count &&
+                              tasks[currentTaskIndex].taskType == ScenarioTaskType.ThrowBallToTarget;
+        if (isGoalThrowTask)
         {
             ballReleasedByUserThisTask = true;
 
@@ -999,6 +1419,45 @@ public class VRFootballScenarioController : MonoBehaviour
 
             goalThrowReleaseRoutine = StartCoroutine(HandleGoalThrowReleaseAfterPhysics(tasks[currentTaskIndex]));
         }
+        else
+        {
+            ResetAutoCatchVelocityTracking();
+        }
+    }
+
+    bool TryTransferAutoCatchSelection(IXRSelectInteractor releasedInteractor)
+    {
+        if (!autoCaughtUsingTrigger || football == null || xrInteractionManager == null)
+        {
+            return false;
+        }
+
+        if (rightHandGrabInteractor != null &&
+            !IsSameInteractor(releasedInteractor, rightHandGrabInteractor) &&
+            IsControllerTriggerPressed(XRNode.RightHand))
+        {
+            autoCaughtTriggerHand = XRNode.RightHand;
+            xrInteractionManager.SelectEnter((IXRSelectInteractor)rightHandGrabInteractor, (IXRSelectInteractable)football);
+            MaintainAutoCaughtBallWithHands();
+            return true;
+        }
+
+        if (leftHandGrabInteractor != null &&
+            !IsSameInteractor(releasedInteractor, leftHandGrabInteractor) &&
+            IsControllerTriggerPressed(XRNode.LeftHand))
+        {
+            autoCaughtTriggerHand = XRNode.LeftHand;
+            xrInteractionManager.SelectEnter((IXRSelectInteractor)leftHandGrabInteractor, (IXRSelectInteractable)football);
+            MaintainAutoCaughtBallWithHands();
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool IsSameInteractor(IXRSelectInteractor interactor, XRBaseInteractor baseInteractor)
+    {
+        return interactor != null && baseInteractor != null && ReferenceEquals(interactor, (IXRSelectInteractor)baseInteractor);
     }
 
     IEnumerator HandleGoalThrowReleaseAfterPhysics(ScenarioTask task)
@@ -1123,6 +1582,11 @@ public class VRFootballScenarioController : MonoBehaviour
     void MaintainScriptedBallRotation()
     {
         if (football == null || footballBody == null)
+        {
+            return;
+        }
+
+        if (autoCaughtUsingTrigger && ballHeldByUser)
         {
             return;
         }
@@ -1287,6 +1751,25 @@ public class VRFootballScenarioController : MonoBehaviour
         objectiveIndicator.rotation = target.rotation;
     }
 
+    void UpdateAutoCatchZoneState(ScenarioTask activeTask)
+    {
+        if (autoCatchZone == null)
+        {
+            return;
+        }
+
+        var enableZone = activeTask != null && activeTask.taskType == ScenarioTaskType.CatchBall;
+        SetAutoCatchZoneActive(enableZone);
+    }
+
+    void SetAutoCatchZoneActive(bool active)
+    {
+        if (autoCatchZone != null && autoCatchZone.gameObject.activeSelf != active)
+        {
+            autoCatchZone.gameObject.SetActive(active);
+        }
+    }
+
     void UpdateHandObjectiveIndicator(Transform target, bool visible)
     {
         if (handObjectiveIndicator == null)
@@ -1350,16 +1833,24 @@ public class VRFootballScenarioController : MonoBehaviour
         if (IsFootballNearGoalReceiver())
         {
             TriggerGoalCatch();
+            ResetAutoCatchVelocityTracking();
             return;
         }
 
-        var throwVelocity = footballBody != null ? footballBody.linearVelocity : Vector3.zero;
+        var throwVelocity = GetGoalThrowReleaseVelocity();
+        if (footballBody != null && throwVelocity.sqrMagnitude > 0.0001f)
+        {
+            footballBody.isKinematic = false;
+            footballBody.linearVelocity = throwVelocity;
+        }
+
         var throwSpeed = throwVelocity.magnitude;
         var targetDirection = throwTarget.position - football.transform.position;
 
         if (targetDirection.sqrMagnitude < 0.0001f)
         {
             TriggerGoalCatch();
+            ResetAutoCatchVelocityTracking();
             return;
         }
 
@@ -1386,6 +1877,7 @@ public class VRFootballScenarioController : MonoBehaviour
             if (handReference == null)
             {
                 BeginGoalThrowWatch(task);
+                ResetAutoCatchVelocityTracking();
                 return;
             }
 
@@ -1401,6 +1893,7 @@ public class VRFootballScenarioController : MonoBehaviour
         if (directionDot < throwDirectionAcceptanceDot)
         {
             BeginGoalThrowWatch(task);
+            ResetAutoCatchVelocityTracking();
             return;
         }
 
@@ -1408,10 +1901,21 @@ public class VRFootballScenarioController : MonoBehaviour
         goalThrowDirectionAccepted = true;
         RestoreNormalTime();
         LaunchGoalThrow(throwTarget);
+        ResetAutoCatchVelocityTracking();
         if (!taskFailedEarly)
         {
             BeginGoalThrowWatch(task);
         }
+    }
+
+    Vector3 GetGoalThrowReleaseVelocity()
+    {
+        if (hasPendingAutoCatchReleaseVelocity)
+        {
+            return pendingAutoCatchReleaseVelocity;
+        }
+
+        return footballBody != null ? footballBody.linearVelocity : Vector3.zero;
     }
 
     void FailGoalThrow(string message)
@@ -1493,6 +1997,7 @@ public class VRFootballScenarioController : MonoBehaviour
         queuedGoalThrow = true;
         goalThrowDirectionAccepted = true;
         queuedGoalThrowHoldTarget = holdTarget != null ? holdTarget : GetPreferredCatchTarget();
+        ResetAutoCatchVelocityTracking();
         SetThrowTrajectoryVisible(false);
         RestoreNormalTime();
         HoldQueuedGoalThrowBall();

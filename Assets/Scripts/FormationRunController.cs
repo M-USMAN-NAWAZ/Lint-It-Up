@@ -1711,6 +1711,14 @@ public class FormationRunController : MonoBehaviour
 
         var destinationPointIndex = segmentIndex + 1;
         var useSideWalk = ShouldUseOpeningSideWalk(runner, isMoving, destinationPointIndex);
+        if (IsPasserLeftSecondRunner(runner))
+        {
+            useSideWalk = false;
+        }
+        if (IsSecondAdwanceFacingRunner(runner))
+        {
+            useSideWalk = false;
+        }
         var useOpeningCrouch = isMoving && destinationPointIndex > 0 && destinationPointIndex < runner.openingCrouchSegmentCount;
 
         if (!isMoving)
@@ -1750,6 +1758,26 @@ public class FormationRunController : MonoBehaviour
             return;
         }
 
+        if (IsSecondAdwanceFacingRunner(runner))
+        {
+            var horizontalVelocity = worldVelocity;
+            if (runner.keepYFromActor)
+            {
+                horizontalVelocity.y = 0f;
+            }
+
+            var hasMeaningfulStartupMotion = horizontalVelocity.sqrMagnitude > 0.04f || normalizedSpeed > 0.2f;
+            if (!hasMeaningfulStartupMotion)
+            {
+                driver.ClearMovement();
+                driver.SetSideWalk(false);
+                driver.SetHasBall(runner.runtimeHasBall);
+                driver.SetCrouchPose(false);
+                driver.ApplyStates();
+                return;
+            }
+        }
+
         driver.ClearMovement();
         driver.ClearCrouch();
 
@@ -1787,6 +1815,12 @@ public class FormationRunController : MonoBehaviour
         var localBlend = runner.actor != null
             ? runner.actor.InverseTransformDirection(velocityForBlend)
             : velocityForBlend;
+
+        if (IsPasserLeftSecondRunner(runner))
+        {
+            localBlend.x = 0f;
+            localBlend.z = Mathf.Abs(localBlend.z) > 0.01f ? Mathf.Abs(localBlend.z) : normalizedSpeed * Mathf.Max(0.01f, runner.maxMoveSpeed);
+        }
 
         var maxSpeed = Mathf.Max(0.01f, runner.maxMoveSpeed);
         var lateral = Mathf.Clamp(localBlend.x / maxSpeed, -1f, 1f);
@@ -1930,6 +1964,12 @@ public class FormationRunController : MonoBehaviour
             ? runner.actor.InverseTransformDirection(velocityForBlend)
             : velocityForBlend;
 
+        if (IsPasserLeftSecondRunner(runner))
+        {
+            localBlend.x = 0f;
+            localBlend.z = Mathf.Abs(localBlend.z) > 0.01f ? Mathf.Abs(localBlend.z) : normalizedSpeed * Mathf.Max(0.01f, runner.maxMoveSpeed);
+        }
+
         var maxSpeed = Mathf.Max(0.01f, runner.maxMoveSpeed);
         var lateral = Mathf.Clamp(localBlend.x / maxSpeed, -1f, 1f);
         var forward = Mathf.Clamp(localBlend.z / maxSpeed, -1f, 1f);
@@ -2016,7 +2056,8 @@ public class FormationRunController : MonoBehaviour
             return false;
         }
 
-        return IsCentre2Runner(runner) && destinationPointIndex <= runner.openingNoRotatePointCount;
+        return (IsCentre2Runner(runner) || IsCentre1Runner(runner)) &&
+               destinationPointIndex <= runner.openingNoRotatePointCount;
     }
 
     static bool ShouldUseOpeningSideWalk(TeamRunner runner, bool isMoving, int destinationPointIndex)
@@ -2034,6 +2075,11 @@ public class FormationRunController : MonoBehaviour
         if (IsGoalRunner(runner))
         {
             return destinationPointIndex <= runner.openingSideWalkSegmentCount;
+        }
+
+        if (IsNothingToDoRunner(runner))
+        {
+            return destinationPointIndex == runner.openingSideWalkSegmentCount;
         }
 
         return destinationPointIndex < runner.openingSideWalkSegmentCount;
@@ -2098,6 +2144,18 @@ public class FormationRunController : MonoBehaviour
                name.Equals("Center 2", System.StringComparison.OrdinalIgnoreCase);
     }
 
+    static bool IsCentre1Runner(TeamRunner runner)
+    {
+        if (runner == null || string.IsNullOrWhiteSpace(runner.playerName))
+        {
+            return false;
+        }
+
+        var name = runner.playerName.Trim();
+        return name.Equals("Centre 1", System.StringComparison.OrdinalIgnoreCase) ||
+               name.Equals("Center 1", System.StringComparison.OrdinalIgnoreCase);
+    }
+
     static bool IsFakeRunner(TeamRunner runner)
     {
         if (runner == null || string.IsNullOrWhiteSpace(runner.playerName))
@@ -2120,6 +2178,40 @@ public class FormationRunController : MonoBehaviour
         var name = runner.playerName.Trim();
         return name.Equals("Goal", System.StringComparison.OrdinalIgnoreCase) ||
                name.Equals("Gole", System.StringComparison.OrdinalIgnoreCase);
+    }
+
+    static bool IsNothingToDoRunner(TeamRunner runner)
+    {
+        if (runner == null || string.IsNullOrWhiteSpace(runner.playerName))
+        {
+            return false;
+        }
+
+        return runner.playerName.Trim().Equals("Nothing to do", System.StringComparison.OrdinalIgnoreCase);
+    }
+
+    static bool IsPasserLeftSecondRunner(TeamRunner runner)
+    {
+        if (runner == null || string.IsNullOrWhiteSpace(runner.playerName))
+        {
+            return false;
+        }
+
+        var name = runner.playerName.Trim();
+        return name.Equals("Passer Left second", System.StringComparison.OrdinalIgnoreCase) ||
+               name.Equals("Passer Left Second", System.StringComparison.OrdinalIgnoreCase);
+    }
+
+    static bool IsSecondAdwanceFacingRunner(TeamRunner runner)
+    {
+        if (runner == null || string.IsNullOrWhiteSpace(runner.playerName))
+        {
+            return false;
+        }
+
+        var name = runner.playerName.Trim();
+        return name.Equals("Second Adwance Facing", System.StringComparison.OrdinalIgnoreCase) ||
+               name.Equals("Second Advance Facing", System.StringComparison.OrdinalIgnoreCase);
     }
 
     bool ShouldUseOpeningCrouch(TeamRunner runner)

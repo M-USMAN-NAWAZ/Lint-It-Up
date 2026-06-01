@@ -2,6 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using System.Collections;
 
 public class Game1QuestionnaireUI : MonoBehaviour
 {
@@ -13,6 +14,7 @@ public class Game1QuestionnaireUI : MonoBehaviour
         public string optionA;
         public string optionB;
         public string optionC;
+        public AudioClip voiceClip;
     }
 
     [Header("Panels")]
@@ -34,8 +36,15 @@ public class Game1QuestionnaireUI : MonoBehaviour
     [SerializeField] TMP_Text optionBLabel;
     [SerializeField] TMP_Text optionCLabel;
 
+    [Header("Audio")]
+    [SerializeField] AudioSource questionAudioSource;
+    [SerializeField] AudioClip postQuestionnaireVoiceClip;
+
     [Header("Scene")]
     [SerializeField] string nextSceneName = "Game";
+    [SerializeField] float firstQuestionDelay = 8f;
+    [SerializeField] float secondQuestionDelay = 5f;
+    [SerializeField] SceneOrbitCamera orbitCamera;
 
     [SerializeField] QuestionStep[] questions =
     {
@@ -58,17 +67,45 @@ public class Game1QuestionnaireUI : MonoBehaviour
     };
 
     int currentQuestionIndex;
+    bool isTransitioning;
 
     void Awake()
     {
+        EnsureAudioSource();
+        ResolveOrbitCamera();
         BindButtons();
-        ShowQuestionnaireShell();
-        ShowQuestion(0);
+        HideQuestionnaire();
+        StartCoroutine(BeginQuestionnaireSequence());
     }
 
     void OnDestroy()
     {
         UnbindButtons();
+    }
+
+    void EnsureAudioSource()
+    {
+        if (questionAudioSource == null)
+        {
+            questionAudioSource = GetComponent<AudioSource>();
+        }
+
+        if (questionAudioSource == null)
+        {
+            questionAudioSource = gameObject.AddComponent<AudioSource>();
+        }
+
+        questionAudioSource.playOnAwake = false;
+        questionAudioSource.loop = false;
+        questionAudioSource.spatialBlend = 0f;
+    }
+
+    void ResolveOrbitCamera()
+    {
+        if (orbitCamera == null)
+        {
+            orbitCamera = FindObjectOfType<SceneOrbitCamera>();
+        }
     }
 
     void BindButtons()
@@ -107,6 +144,14 @@ public class Game1QuestionnaireUI : MonoBehaviour
         }
     }
 
+    IEnumerator BeginQuestionnaireSequence()
+    {
+        yield return new WaitForSeconds(firstQuestionDelay);
+        SetOrbitPaused(true);
+        ShowQuestionnaireShell();
+        ShowQuestion(0);
+    }
+
     void ShowQuestionnaireShell()
     {
         SetActive(rootPanel, true);
@@ -119,6 +164,14 @@ public class Game1QuestionnaireUI : MonoBehaviour
             timerText.text = string.Empty;
             timerText.gameObject.SetActive(false);
         }
+    }
+
+    void HideQuestionnaire()
+    {
+        SetActive(taskPanel, false);
+        SetActive(countdownPanel, false);
+        SetActive(failPanel, false);
+        SetActive(rootPanel, false);
     }
 
     void ShowQuestion(int questionIndex)
@@ -146,6 +199,7 @@ public class Game1QuestionnaireUI : MonoBehaviour
         SetButton(optionAButton, optionALabel, question.optionA);
         SetButton(optionBButton, optionBLabel, question.optionB);
         SetButton(optionCButton, optionCLabel, question.optionC);
+        PlayQuestionVoice(question.voiceClip);
     }
 
     void OnOptionASelected()
@@ -165,15 +219,84 @@ public class Game1QuestionnaireUI : MonoBehaviour
 
     void AdvanceQuestionnaire()
     {
+        if (isTransitioning)
+        {
+            return;
+        }
+
         if (currentQuestionIndex < questions.Length - 1)
         {
-            ShowQuestion(currentQuestionIndex + 1);
+            StartCoroutine(TransitionToNextQuestion(currentQuestionIndex + 1));
             return;
+        }
+
+        StartCoroutine(FinishQuestionnaireAndLoadScene());
+    }
+
+    IEnumerator TransitionToNextQuestion(int nextQuestionIndex)
+    {
+        isTransitioning = true;
+        HideQuestionnaire();
+        StopQuestionVoice();
+        SetOrbitPaused(false);
+        yield return new WaitForSeconds(secondQuestionDelay);
+        SetOrbitPaused(true);
+        ShowQuestionnaireShell();
+        ShowQuestion(nextQuestionIndex);
+        isTransitioning = false;
+    }
+
+    IEnumerator FinishQuestionnaireAndLoadScene()
+    {
+        isTransitioning = true;
+        HideQuestionnaire();
+        StopQuestionVoice();
+        SetOrbitPaused(true);
+
+        if (questionAudioSource != null && postQuestionnaireVoiceClip != null)
+        {
+            questionAudioSource.clip = postQuestionnaireVoiceClip;
+            questionAudioSource.Play();
+            yield return new WaitWhile(() => questionAudioSource != null && questionAudioSource.isPlaying);
         }
 
         if (!string.IsNullOrWhiteSpace(nextSceneName))
         {
             SceneManager.LoadSceneAsync(nextSceneName);
+        }
+    }
+
+    void PlayQuestionVoice(AudioClip clip)
+    {
+        if (questionAudioSource == null)
+        {
+            return;
+        }
+
+        questionAudioSource.Stop();
+        questionAudioSource.clip = clip;
+        if (clip != null)
+        {
+            questionAudioSource.Play();
+        }
+    }
+
+    void StopQuestionVoice()
+    {
+        if (questionAudioSource == null)
+        {
+            return;
+        }
+
+        questionAudioSource.Stop();
+        questionAudioSource.clip = null;
+    }
+
+    void SetOrbitPaused(bool paused)
+    {
+        if (orbitCamera != null)
+        {
+            orbitCamera.SetOrbitPaused(paused);
         }
     }
 

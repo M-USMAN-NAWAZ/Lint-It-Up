@@ -72,7 +72,7 @@ public class FootballAnimationStateDriver : MonoBehaviour
 
         if (animator != null)
         {
-            animator.applyRootMotion = false;
+            // animator.applyRootMotion = false;
             CacheParameters();
             ClearAllStates();
             ApplyStates();
