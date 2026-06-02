@@ -413,6 +413,7 @@ public class VRFootballScenarioController : MonoBehaviour
         if (formationController != null)
         {
             formationController.TriggerDeferredHutHut();
+            ScenarioHutHutTimer.StopForHutHut();
         }
 
         var catchTarget = ballCatchTarget != null ? ballCatchTarget : GetPreferredCatchTarget();
@@ -1500,6 +1501,7 @@ public class VRFootballScenarioController : MonoBehaviour
         if (formationController != null)
         {
             formationController.TriggerDeferredHutHut();
+            ScenarioHutHutTimer.StopForHutHut();
         }
         if (keepCountdownVisibleUntilBallToss && scenarioUI != null)
         {

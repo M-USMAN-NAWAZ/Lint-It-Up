@@ -16,6 +16,8 @@ public class SceneOrbitCamera : MonoBehaviour
     Vector3 orbitCenter;
     bool orbitPaused;
 
+    public Transform OrbitTarget => orbitTarget;
+
     void Start()
     {
         if (orbitTarget == null)
@@ -107,5 +109,33 @@ public class SceneOrbitCamera : MonoBehaviour
         }
 
         return bounds.center + orbitCenterOffset;
+    }
+
+    public Vector3 GetOrbitTargetTopPosition(float verticalOffset)
+    {
+        if (orbitTarget == null)
+        {
+            return transform.position + Vector3.up * verticalOffset;
+        }
+
+        var center = orbitTarget.position + orbitCenterOffset;
+        if (!useChildRendererBoundsCenter)
+        {
+            return center + Vector3.up * verticalOffset;
+        }
+
+        var renderers = orbitTarget.GetComponentsInChildren<Renderer>();
+        if (renderers.Length == 0)
+        {
+            return center + Vector3.up * verticalOffset;
+        }
+
+        var bounds = renderers[0].bounds;
+        for (var i = 1; i < renderers.Length; i++)
+        {
+            bounds.Encapsulate(renderers[i].bounds);
+        }
+
+        return new Vector3(bounds.center.x, bounds.max.y + verticalOffset, bounds.center.z) + orbitCenterOffset;
     }
 }

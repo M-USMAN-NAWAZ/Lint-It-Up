@@ -3,7 +3,9 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Collections;
+using System;
 
+[ExecuteAlways]
 public class Game1QuestionnaireUI : MonoBehaviour
 {
     [System.Serializable]
@@ -15,6 +17,21 @@ public class Game1QuestionnaireUI : MonoBehaviour
         public string optionB;
         public string optionC;
         public AudioClip voiceClip;
+    }
+
+    [Serializable]
+    class GroundPlayerHighlighter
+    {
+        public GameObject root;
+        public Transform targetPlayer;
+        public string playerNumber = "88";
+        public string playerPosition = "BARNER";
+        public Vector3 groundOffset = new Vector3(0f, 0.04f, -1.25f);
+        public float scale = 1f;
+
+        [NonSerialized] public bool visualBuilt;
+        [NonSerialized] public TextMeshPro numberText;
+        [NonSerialized] public TextMeshPro positionText;
     }
 
     [Header("Panels")]
@@ -42,9 +59,17 @@ public class Game1QuestionnaireUI : MonoBehaviour
 
     [Header("Scene")]
     [SerializeField] string nextSceneName = "Game";
+    [SerializeField] float scenarioTimeoutSeconds = 40f;
+    [SerializeField] string game1SceneName = "Game 1";
     [SerializeField] float firstQuestionDelay = 8f;
     [SerializeField] float secondQuestionDelay = 5f;
     [SerializeField] SceneOrbitCamera orbitCamera;
+
+    [Header("Ground Highlighters")]
+    [SerializeField] GroundPlayerHighlighter[] playerHighlighters = new GroundPlayerHighlighter[2];
+    [SerializeField] Color highlighterBlue = new Color(0.02f, 0.14f, 0.65f, 0.88f);
+    [SerializeField] Color highlighterGreen = new Color(0.12f, 0.82f, 0.35f, 0.95f);
+    [SerializeField] Color highlighterTextColor = Color.white;
 
     [SerializeField] QuestionStep[] questions =
     {
@@ -71,16 +96,44 @@ public class Game1QuestionnaireUI : MonoBehaviour
 
     void Awake()
     {
+        EnsureAllHighlighterVisuals();
+        if (!Application.isPlaying)
+        {
+            return;
+        }
+
+        ScenarioHutHutTimer.StartTimer(scenarioTimeoutSeconds, game1SceneName, nextSceneName);
         EnsureAudioSource();
         ResolveOrbitCamera();
         BindButtons();
         HideQuestionnaire();
+        SetPlayerHighlightersVisible(false);
         StartCoroutine(BeginQuestionnaireSequence());
+    }
+
+    void Update()
+    {
+        if (!Application.isPlaying)
+        {
+            return;
+        }
+
+        UpdatePlayerHighlighters();
     }
 
     void OnDestroy()
     {
+        if (!Application.isPlaying)
+        {
+            return;
+        }
+
         UnbindButtons();
+    }
+
+    void OnValidate()
+    {
+        EnsureAllHighlighterVisuals();
     }
 
     void EnsureAudioSource()
@@ -226,6 +279,7 @@ public class Game1QuestionnaireUI : MonoBehaviour
 
         if (currentQuestionIndex < questions.Length - 1)
         {
+            SetPlayerHighlightersVisible(true);
             StartCoroutine(TransitionToNextQuestion(currentQuestionIndex + 1));
             return;
         }
@@ -249,6 +303,7 @@ public class Game1QuestionnaireUI : MonoBehaviour
     IEnumerator FinishQuestionnaireAndLoadScene()
     {
         isTransitioning = true;
+        SetPlayerHighlightersVisible(false);
         HideQuestionnaire();
         StopQuestionVoice();
         SetOrbitPaused(true);
@@ -297,6 +352,248 @@ public class Game1QuestionnaireUI : MonoBehaviour
         if (orbitCamera != null)
         {
             orbitCamera.SetOrbitPaused(paused);
+        }
+    }
+
+    void SetPlayerHighlightersVisible(bool visible)
+    {
+        if (playerHighlighters == null)
+        {
+            return;
+        }
+
+        for (var i = 0; i < playerHighlighters.Length; i++)
+        {
+            var highlighter = playerHighlighters[i];
+            if (highlighter == null || highlighter.root == null)
+            {
+                continue;
+            }
+
+            EnsureHighlighterVisual(highlighter);
+            var shouldShow = visible && highlighter.targetPlayer != null;
+            if (shouldShow)
+            {
+                PositionHighlighter(highlighter);
+                UpdateHighlighterText(highlighter);
+            }
+
+            highlighter.root.SetActive(shouldShow);
+        }
+    }
+
+    void EnsureAllHighlighterVisuals()
+    {
+        if (playerHighlighters == null)
+        {
+            return;
+        }
+
+        for (var i = 0; i < playerHighlighters.Length; i++)
+        {
+            var highlighter = playerHighlighters[i];
+            if (highlighter == null || highlighter.root == null)
+            {
+                continue;
+            }
+
+            EnsureHighlighterVisual(highlighter);
+        }
+    }
+
+    void UpdatePlayerHighlighters()
+    {
+        if (playerHighlighters == null)
+        {
+            return;
+        }
+
+        for (var i = 0; i < playerHighlighters.Length; i++)
+        {
+            var highlighter = playerHighlighters[i];
+            if (highlighter == null || highlighter.root == null || !highlighter.root.activeSelf)
+            {
+                continue;
+            }
+
+            if (highlighter.targetPlayer == null)
+            {
+                highlighter.root.SetActive(false);
+                continue;
+            }
+
+            EnsureHighlighterVisual(highlighter);
+            PositionHighlighter(highlighter);
+            UpdateHighlighterText(highlighter);
+        }
+    }
+
+    void EnsureHighlighterVisual(GroundPlayerHighlighter highlighter)
+    {
+        if (highlighter.visualBuilt || highlighter.root == null)
+        {
+            return;
+        }
+
+        if (TryUseExistingHighlighterVisual(highlighter))
+        {
+            return;
+        }
+
+        var shadow = CreateQuad("Soft Shadow", highlighter.root.transform, new Color(0f, 0f, 0f, 0.45f));
+        shadow.transform.localPosition = new Vector3(0.08f, -0.06f, 0.002f);
+        shadow.transform.localScale = new Vector3(3.2f, 0.86f, 1f);
+
+        var plate = CreateQuad("Plate", highlighter.root.transform, highlighterBlue);
+        plate.transform.localPosition = new Vector3(0f, 0f, 0.006f);
+        plate.transform.localScale = new Vector3(3.05f, 0.74f, 1f);
+
+        var highlight = CreateQuad("Top Highlight", highlighter.root.transform, new Color(1f, 1f, 1f, 0.16f));
+        highlight.transform.localPosition = new Vector3(0f, 0.24f, 0.01f);
+        highlight.transform.localScale = new Vector3(2.82f, 0.12f, 1f);
+
+        var accent = CreateQuad("Accent", highlighter.root.transform, highlighterGreen);
+        accent.transform.localPosition = new Vector3(-1.08f, -0.23f, 0.012f);
+        accent.transform.localRotation = Quaternion.Euler(0f, 0f, -14f);
+        accent.transform.localScale = new Vector3(0.95f, 0.13f, 1f);
+
+        var numberBlock = CreateQuad("Number Block", highlighter.root.transform, new Color(0.01f, 0.06f, 0.34f, 0.94f));
+        numberBlock.transform.localPosition = new Vector3(1.08f, 0f, 0.014f);
+        numberBlock.transform.localScale = new Vector3(0.74f, 0.56f, 1f);
+
+        var pointer = CreateQuad("Ground Pointer", highlighter.root.transform, highlighterGreen);
+        pointer.transform.localPosition = new Vector3(1.72f, 0.48f, 0.009f);
+        pointer.transform.localRotation = Quaternion.Euler(0f, 0f, 38f);
+        pointer.transform.localScale = new Vector3(0.16f, 1.25f, 1f);
+
+        highlighter.positionText = CreateHighlighterText(
+            "Position Text",
+            highlighter.root.transform,
+            new Vector3(-0.35f, -0.015f, -0.05f),
+            new Vector2(2.35f, 0.8f),
+            5.2f,
+            TextAlignmentOptions.Center);
+
+        highlighter.numberText = CreateHighlighterText(
+            "Number Text",
+            highlighter.root.transform,
+            new Vector3(1.08f, -0.015f, -0.055f),
+            new Vector2(0.95f, 0.8f),
+            5.6f,
+            TextAlignmentOptions.Center);
+
+        highlighter.visualBuilt = true;
+        UpdateHighlighterText(highlighter);
+    }
+
+    bool TryUseExistingHighlighterVisual(GroundPlayerHighlighter highlighter)
+    {
+        var existingNumber = highlighter.root.transform.Find("Number Text");
+        var existingPosition = highlighter.root.transform.Find("Position Text");
+        if (existingNumber == null || existingPosition == null)
+        {
+            return false;
+        }
+
+        highlighter.numberText = existingNumber.GetComponent<TextMeshPro>();
+        highlighter.positionText = existingPosition.GetComponent<TextMeshPro>();
+        highlighter.visualBuilt = true;
+        UpdateHighlighterText(highlighter);
+        return true;
+    }
+
+    TextMeshPro CreateHighlighterText(
+        string objectName,
+        Transform parent,
+        Vector3 localPosition,
+        Vector2 size,
+        float maxFontSize,
+        TextAlignmentOptions alignment)
+    {
+        var textObject = new GameObject(objectName, typeof(RectTransform), typeof(MeshRenderer), typeof(TextMeshPro));
+        textObject.transform.SetParent(parent, false);
+        textObject.transform.localPosition = localPosition;
+        textObject.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+        textObject.transform.localScale = Vector3.one * 0.78f;
+
+        var text = textObject.GetComponent<TextMeshPro>();
+        text.alignment = alignment;
+        text.fontSize = maxFontSize;
+        text.fontStyle = FontStyles.Bold;
+        text.color = highlighterTextColor;
+        text.rectTransform.sizeDelta = size;
+        text.enableAutoSizing = true;
+        text.fontSizeMin = 2.2f;
+        text.fontSizeMax = maxFontSize;
+        return text;
+    }
+
+    GameObject CreateQuad(string objectName, Transform parent, Color color)
+    {
+        var quad = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        quad.name = objectName;
+        quad.transform.SetParent(parent, false);
+
+        var collider = quad.GetComponent<Collider>();
+        if (collider != null)
+        {
+            DestroyObject(collider);
+        }
+
+        var renderer = quad.GetComponent<MeshRenderer>();
+        renderer.sharedMaterial = CreateHighlighterMaterial(color);
+        return quad;
+    }
+
+    Material CreateHighlighterMaterial(Color color)
+    {
+        var shader = Shader.Find("Universal Render Pipeline/Unlit");
+        if (shader == null)
+        {
+            shader = Shader.Find("Unlit/Color");
+        }
+
+        var material = new Material(shader);
+        material.color = color;
+        return material;
+    }
+
+    void PositionHighlighter(GroundPlayerHighlighter highlighter)
+    {
+        var target = highlighter.targetPlayer;
+        var rootTransform = highlighter.root.transform;
+        rootTransform.position = target.position + highlighter.groundOffset;
+        rootTransform.rotation = Quaternion.Euler(90f, target.eulerAngles.y + 180f, 0f);
+        rootTransform.localScale = Vector3.one * Mathf.Max(0.01f, highlighter.scale);
+    }
+
+    void UpdateHighlighterText(GroundPlayerHighlighter highlighter)
+    {
+        if (highlighter.numberText == null || highlighter.positionText == null)
+        {
+            return;
+        }
+
+        var number = string.IsNullOrWhiteSpace(highlighter.playerNumber) ? "--" : highlighter.playerNumber;
+        var position = string.IsNullOrWhiteSpace(highlighter.playerPosition) ? "PLAYER" : highlighter.playerPosition;
+        highlighter.positionText.text = position.ToUpperInvariant();
+        highlighter.numberText.text = number;
+    }
+
+    void DestroyObject(UnityEngine.Object target)
+    {
+        if (target == null)
+        {
+            return;
+        }
+
+        if (Application.isPlaying)
+        {
+            Destroy(target);
+        }
+        else
+        {
+            DestroyImmediate(target);
         }
     }
 
