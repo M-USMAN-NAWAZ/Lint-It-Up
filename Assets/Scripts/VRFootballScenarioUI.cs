@@ -303,12 +303,39 @@ public class VRFootballScenarioUI : MonoBehaviour
     public void HideCountdown()
     {
         SetActive(countdownPanel, false);
+        RefreshRootVisibility();
     }
 
     public void HideTask()
     {
         SetActive(taskPanel, false);
         SetActive(resumePanel, false);
+        RefreshRootVisibility();
+    }
+
+    void RefreshRootVisibility()
+    {
+        if (rootPanel == null)
+        {
+            return;
+        }
+
+        var anyPanelVisible =
+            IsActive(countdownPanel) ||
+            IsActive(taskPanel) ||
+            IsActive(failPanel) ||
+            IsActive(successPanel) ||
+            IsActive(resumePanel);
+
+        if (!anyPanelVisible)
+        {
+            rootPanel.SetActive(false);
+        }
+    }
+
+    static bool IsActive(GameObject target)
+    {
+        return target != null && target.activeSelf;
     }
 
     static void SetActive(GameObject target, bool state)

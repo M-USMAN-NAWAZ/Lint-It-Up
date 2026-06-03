@@ -111,8 +111,15 @@ public class FootballAnimationStateDriver : MonoBehaviour
 
     public void SetBallGrabRunning(bool value)
     {
-        ballGrabRunning = false;
+        ballGrabRunning = value;
         hasBall = value || hasBall;
+        if (value)
+        {
+            idle = false;
+            running = false;
+            sideWalk = false;
+            ClearCrouch();
+        }
     }
 
     public void SetBallCatch(bool value)
@@ -206,12 +213,9 @@ public class FootballAnimationStateDriver : MonoBehaviour
         var useSideWalk = isMoving && Mathf.Abs(lateral) > Mathf.Abs(forward);
 
         idle = false;
-        running = isMoving && !useSideWalk;
-        
-        
-
+        running = isMoving && !useSideWalk && !carryingBall;
+        ballGrabRunning = isMoving && !useSideWalk && carryingBall;
         sideWalk = useSideWalk;
-        ballGrabRunning = false;
         hasBall = carryingBall;
 
         if (isMoving)
@@ -350,6 +354,13 @@ public class FootballAnimationStateDriver : MonoBehaviour
             resolvedIdle = false;
             resolvedRunning = false;
             resolvedBallGrabRunning = false;
+        }
+        else if (resolvedBallGrabRunning)
+        {
+            resolvedIdle = false;
+            resolvedRunning = false;
+            resolvedSideWalk = false;
+            resolvedHasBall = true;
         }
         else if (resolvedRunning)
         {

@@ -65,6 +65,17 @@ public class Game1QuestionnaireUI : MonoBehaviour
     [SerializeField] float secondQuestionDelay = 5f;
     [SerializeField] SceneOrbitCamera orbitCamera;
 
+    [Header("Play Clock Display")]
+    [SerializeField] bool showPlayClock = true;
+    [SerializeField] string playClockLabel = "Play Clock";
+    [SerializeField] Vector3 playClockOffset = new Vector3(0f, 2.2f, 0f);
+    [SerializeField] int playClockSortingOrder = 120;
+    [SerializeField] Camera playClockCamera;
+    [SerializeField] Color playClockBackgroundColor = new Color(0f, 0f, 0f, 0.68f);
+    [SerializeField] Color playClockTextColor = Color.white;
+    [SerializeField] RectTransform playClockRoot;
+    [SerializeField] TMP_Text playClockText;
+
     [Header("Ground Highlighters")]
     [SerializeField] GroundPlayerHighlighter[] playerHighlighters = new GroundPlayerHighlighter[2];
     [SerializeField] Color highlighterBlue = new Color(0.02f, 0.14f, 0.65f, 0.88f);
@@ -93,6 +104,7 @@ public class Game1QuestionnaireUI : MonoBehaviour
 
     int currentQuestionIndex;
     bool isTransitioning;
+    float playClockStartedAt;
 
     void Awake()
     {
@@ -105,6 +117,7 @@ public class Game1QuestionnaireUI : MonoBehaviour
         ScenarioHutHutTimer.StartTimer(scenarioTimeoutSeconds, game1SceneName, nextSceneName);
         EnsureAudioSource();
         ResolveOrbitCamera();
+        StartPlayClock();
         BindButtons();
         HideQuestionnaire();
         SetPlayerHighlightersVisible(false);
@@ -119,6 +132,7 @@ public class Game1QuestionnaireUI : MonoBehaviour
         }
 
         UpdatePlayerHighlighters();
+        UpdatePlayClock();
     }
 
     void OnDestroy()
@@ -134,6 +148,12 @@ public class Game1QuestionnaireUI : MonoBehaviour
     void OnValidate()
     {
         EnsureAllHighlighterVisuals();
+        EnsurePlayClockDisplay();
+        if (!Application.isPlaying)
+        {
+            SetPlayClockSampleText();
+            SetActive(playClockRoot != null ? playClockRoot.gameObject : null, showPlayClock);
+        }
     }
 
     void EnsureAudioSource()
@@ -159,6 +179,189 @@ public class Game1QuestionnaireUI : MonoBehaviour
         {
             orbitCamera = FindObjectOfType<SceneOrbitCamera>();
         }
+    }
+
+    void StartPlayClock()
+    {
+        playClockStartedAt = Time.realtimeSinceStartup;
+        EnsurePlayClockDisplay();
+        SetActive(playClockRoot != null ? playClockRoot.gameObject : null, showPlayClock);
+        UpdatePlayClock();
+    }
+
+    void EnsurePlayClockDisplay()
+    {
+        if (playClockRoot == null)
+        {
+            var existing = transform.Find("Game 1 Play Clock");
+            if (existing != null)
+            {
+                playClockRoot = existing.GetComponent<RectTransform>();
+            }
+            else
+            {
+                var clockObject = new GameObject("Game 1 Play Clock", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
+                clockObject.transform.SetParent(transform, false);
+                playClockRoot = clockObject.GetComponent<RectTransform>();
+            }
+
+            if (playClockRoot == null)
+            {
+                return;
+            }
+        }
+
+        var canvas = playClockRoot.GetComponent<Canvas>();
+        if (canvas == null)
+        {
+            canvas = playClockRoot.gameObject.AddComponent<Canvas>();
+        }
+
+        canvas.renderMode = RenderMode.WorldSpace;
+        canvas.sortingOrder = playClockSortingOrder;
+
+        var scaler = playClockRoot.GetComponent<CanvasScaler>();
+        if (scaler == null)
+        {
+            scaler = playClockRoot.gameObject.AddComponent<CanvasScaler>();
+        }
+
+        scaler.dynamicPixelsPerUnit = 12f;
+
+        var background = EnsurePlayClockChild<Image>("Background");
+        var backgroundRect = background.GetComponent<RectTransform>();
+        backgroundRect.anchorMin = Vector2.zero;
+        backgroundRect.anchorMax = Vector2.one;
+        backgroundRect.offsetMin = Vector2.zero;
+        backgroundRect.offsetMax = Vector2.zero;
+        background.color = playClockBackgroundColor;
+        background.raycastTarget = false;
+
+        playClockText = EnsurePlayClockChild<TextMeshProUGUI>("Text");
+        var textRect = playClockText.GetComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = new Vector2(16f, 10f);
+        textRect.offsetMax = new Vector2(-16f, -10f);
+        playClockText.color = playClockTextColor;
+        playClockText.raycastTarget = false;
+    }
+
+    T EnsurePlayClockChild<T>(string childName) where T : Component
+    {
+        var child = playClockRoot.transform.Find(childName);
+        var childObject = child != null
+            ? child.gameObject
+            : new GameObject(childName, typeof(RectTransform), typeof(CanvasRenderer), typeof(T));
+
+        if (child == null)
+        {
+            childObject.transform.SetParent(playClockRoot, false);
+        }
+
+        var component = childObject.GetComponent<T>();
+        if (component == null)
+        {
+            component = childObject.AddComponent<T>();
+        }
+
+        return component;
+    }
+
+    void UpdatePlayClock()
+    {
+        if (!showPlayClock)
+        {
+            SetActive(playClockRoot != null ? playClockRoot.gameObject : null, false);
+            return;
+        }
+
+        EnsurePlayClockDisplay();
+        SetActive(playClockRoot != null ? playClockRoot.gameObject : null, true);
+        PositionPlayClock();
+
+        if (playClockText == null)
+        {
+            return;
+        }
+
+        var elapsed = Time.realtimeSinceStartup - playClockStartedAt;
+        var remainingSeconds = Mathf.CeilToInt(Mathf.Max(0f, scenarioTimeoutSeconds - elapsed));
+        var minutes = remainingSeconds / 60;
+        var seconds = remainingSeconds % 60;
+        playClockText.text = playClockLabel + "\n" + minutes.ToString("00") + ":" + seconds.ToString("00");
+    }
+
+    void SetPlayClockSampleText()
+    {
+        if (playClockText == null)
+        {
+            return;
+        }
+
+        var previewSeconds = Mathf.CeilToInt(Mathf.Max(0f, scenarioTimeoutSeconds));
+        var minutes = previewSeconds / 60;
+        var seconds = previewSeconds % 60;
+        playClockText.text = playClockLabel + "\n" + minutes.ToString("00") + ":" + seconds.ToString("00");
+    }
+
+    void PositionPlayClock()
+    {
+        if (playClockRoot == null)
+        {
+            return;
+        }
+
+        var targetPosition = transform.position + playClockOffset;
+        if (orbitCamera != null)
+        {
+            targetPosition = orbitCamera.GetOrbitTargetTopPosition(playClockOffset.y);
+            targetPosition += new Vector3(playClockOffset.x, 0f, playClockOffset.z);
+        }
+
+        playClockRoot.position = targetPosition;
+
+        var cameraTransform = ResolvePlayClockCameraTransform();
+        if (cameraTransform == null)
+        {
+            return;
+        }
+
+        var toClock = playClockRoot.position - cameraTransform.position;
+        if (toClock.sqrMagnitude <= 0.0001f)
+        {
+            return;
+        }
+
+        playClockRoot.rotation = Quaternion.LookRotation(toClock.normalized, Vector3.up);
+    }
+
+    Transform ResolvePlayClockCameraTransform()
+    {
+        if (playClockCamera != null)
+        {
+            return playClockCamera.transform;
+        }
+
+        if (orbitCamera != null)
+        {
+            var orbitCameraComponent = orbitCamera.GetComponent<Camera>();
+            if (orbitCameraComponent != null)
+            {
+                playClockCamera = orbitCameraComponent;
+                return playClockCamera.transform;
+            }
+
+            return orbitCamera.transform;
+        }
+
+        if (Camera.main != null)
+        {
+            playClockCamera = Camera.main;
+            return playClockCamera.transform;
+        }
+
+        return null;
     }
 
     void BindButtons()
@@ -497,6 +700,8 @@ public class Game1QuestionnaireUI : MonoBehaviour
 
         highlighter.numberText = existingNumber.GetComponent<TextMeshPro>();
         highlighter.positionText = existingPosition.GetComponent<TextMeshPro>();
+        existingNumber.localRotation = Quaternion.identity;
+        existingPosition.localRotation = Quaternion.identity;
         highlighter.visualBuilt = true;
         UpdateHighlighterText(highlighter);
         return true;
@@ -563,7 +768,7 @@ public class Game1QuestionnaireUI : MonoBehaviour
         var target = highlighter.targetPlayer;
         var rootTransform = highlighter.root.transform;
         rootTransform.position = target.position + highlighter.groundOffset;
-        rootTransform.rotation = Quaternion.Euler(90f, target.eulerAngles.y + 180f, 0f);
+        rootTransform.rotation = Quaternion.Euler(90f, target.eulerAngles.y, 0f);
         rootTransform.localScale = Vector3.one * Mathf.Max(0.01f, highlighter.scale);
     }
 

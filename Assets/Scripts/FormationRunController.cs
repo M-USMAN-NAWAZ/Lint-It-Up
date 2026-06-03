@@ -125,10 +125,15 @@ public class FormationRunController : MonoBehaviour
     [SerializeField] float postHutHutDelay = 0.1f;
 
     readonly Dictionary<Transform, Coroutine> activeRoutines = new Dictionary<Transform, Coroutine>();
+    readonly List<Coroutine> activeBranchRoutines = new List<Coroutine>();
+    readonly List<TeamRunner> activeTackleRunners = new List<TeamRunner>();
     readonly HashSet<Transform> bumpLockedActors = new HashSet<Transform>();
     const string FakeLayerName = "Fake";
     const float FakeLayerActiveWeight = 1f;
     const float FakeLayerWeightChangeSpeed = 6f;
+    const float RunningBackFakeLayerDropSpeed = 14f;
+    const int RunningBackFakeStartPointNumber = 10;
+    const int RunningBackFakeEndPointNumber = 11;
 
     void Start()
     {
@@ -212,6 +217,7 @@ public class FormationRunController : MonoBehaviour
 
     public void StopBothTeams()
     {
+        StopBranchRoutines();
         StopTeam(playerTeam);
         StopTeam(opponentTeam);
     }
@@ -253,6 +259,50 @@ public class FormationRunController : MonoBehaviour
         }
 
         return Vector3.Distance(runner.actor.position, lastPoint.position) <= Mathf.Max(0.01f, radius);
+    }
+
+    public Transform FindAnyRunnerActor(string runnerName)
+    {
+        var runner = FindRunnerByName(playerTeam, runnerName);
+        if (runner == null)
+        {
+            runner = FindRunnerByName(opponentTeam, runnerName);
+        }
+
+        return runner != null ? runner.actor : null;
+    }
+
+    public void SetPlayerRunnerHasBall(string runnerName, bool hasBall)
+    {
+        var runner = FindRunnerByName(playerTeam, runnerName);
+        SetRunnerHasBall(runner, hasBall);
+    }
+
+    public void SetPlayerRunnerFakeLayerWeight(string runnerName, float weight, bool immediate = false)
+    {
+        var runner = FindRunnerByName(playerTeam, runnerName);
+        SetFakeLayerWeight(runner, weight, immediate);
+    }
+
+    public void StartRunningBackTackleBranch(
+        string runningBackName,
+        string[] playerTacklerNames,
+        string[] opponentTacklerNames,
+        float chaseDuration,
+        float tackleRadius,
+        float fallDownHoldDuration)
+    {
+        var runningBack = FindRunnerByName(playerTeam, runningBackName);
+        if (runningBack == null || runningBack.actor == null)
+        {
+            return;
+        }
+
+        SetRunnerHasBall(runningBack, true);
+        StopBranchRoutines();
+        StartTackleChasers(playerTeam, playerTacklerNames, runningBack, chaseDuration, tackleRadius);
+        StartTackleChasers(opponentTeam, opponentTacklerNames, runningBack, chaseDuration, tackleRadius);
+        activeBranchRoutines.Add(StartCoroutine(WaitForRunningBackTackle(runningBack, tackleRadius, fallDownHoldDuration, chaseDuration)));
     }
 
     TeamRunner FindRunnerByName(List<TeamRunner> team, string runnerName)
@@ -346,6 +396,173 @@ public class FormationRunController : MonoBehaviour
         SetAnimatorSpeed(runner, 0f);
         ApplyLocomotionAnimation(runner, false, -1);
         SetAnimatorPlayback(runner, false);
+    }
+
+    void StartTackleChasers(List<TeamRunner> team, string[] runnerNames, TeamRunner runningBack, float chaseDuration, float tackleRadius)
+    {
+        if (team == null || runnerNames == null)
+        {
+            return;
+        }
+
+        for (var i = 0; i < runnerNames.Length; i++)
+        {
+            var tackler = FindRunnerByName(team, runnerNames[i]);
+            if (tackler == null || tackler.actor == null || tackler == runningBack)
+            {
+                continue;
+            }
+
+            StopRunner(tackler);
+            activeTackleRunners.Add(tackler);
+            activeBranchRoutines.Add(StartCoroutine(ChaseRunningBackForTackle(tackler, runningBack, chaseDuration, tackleRadius)));
+        }
+    }
+
+    IEnumerator ChaseRunningBackForTackle(TeamRunner tackler, TeamRunner runningBack, float chaseDuration, float tackleRadius)
+    {
+        var actor = tackler.actor;
+        SetAnimatorPlayback(tackler, true);
+        SetMovingState(tackler, true);
+
+        var elapsed = 0f;
+        var radius = Mathf.Max(0.05f, tackleRadius);
+        var maxDuration = Mathf.Max(0.1f, chaseDuration);
+
+        while (elapsed < maxDuration && runningBack != null && runningBack.actor != null)
+        {
+            yield return WaitWhileScenarioPaused(tackler);
+
+            var targetPosition = runningBack.actor.position;
+            if (tackler.keepYFromActor)
+            {
+                targetPosition.y = actor.position.y;
+            }
+
+            var toTarget = targetPosition - actor.position;
+            if (toTarget.magnitude <= radius)
+            {
+                break;
+            }
+
+            var step = Mathf.Min(tackler.maxMoveSpeed * Time.deltaTime, toTarget.magnitude);
+            var nextPosition = actor.position + toTarget.normalized * step;
+            var velocity = (nextPosition - actor.position) / Mathf.Max(Time.deltaTime, 0.0001f);
+            var speedRatio = Mathf.Clamp01(velocity.magnitude / Mathf.Max(0.01f, tackler.maxMoveSpeed));
+
+            actor.position = nextPosition;
+            var lookDirection = Vector3.ProjectOnPlane(toTarget, Vector3.up);
+            if (lookDirection.sqrMagnitude > 0.0001f)
+            {
+                var targetRotation = Quaternion.LookRotation(lookDirection.normalized, Vector3.up);
+                actor.rotation = Quaternion.Slerp(actor.rotation, targetRotation, 1f - Mathf.Exp(-tackler.rotationSmoothness * Time.deltaTime));
+            }
+
+            ApplyLocomotionAnimation(tackler, true, -1, velocity, speedRatio);
+            SetAnimatorSpeed(tackler, speedRatio);
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        SetMovingState(tackler, false);
+        SetAnimatorSpeed(tackler, 0f);
+        ApplyLocomotionAnimation(tackler, false, -1);
+        SetAnimatorPlayback(tackler, true);
+    }
+
+    IEnumerator WaitForRunningBackTackle(TeamRunner runningBack, float tackleRadius, float fallDownHoldDuration, float chaseDuration)
+    {
+        var radius = Mathf.Max(0.05f, tackleRadius);
+        var timeoutAt = Time.time + Mathf.Max(0.1f, chaseDuration);
+
+        while (runningBack != null && runningBack.actor != null)
+        {
+            yield return WaitWhileScenarioPaused(runningBack);
+
+            if (IsAnyActiveTacklerNearRunningBack(runningBack, radius))
+            {
+                PlayRunningBackFallDown(runningBack, fallDownHoldDuration);
+                yield break;
+            }
+
+            if (Time.time >= timeoutAt)
+            {
+                PlayRunningBackFallDown(runningBack, fallDownHoldDuration);
+                yield break;
+            }
+
+            yield return null;
+        }
+    }
+
+    bool IsAnyActiveTacklerNearRunningBack(TeamRunner runningBack, float radius)
+    {
+        if (runningBack == null || runningBack.actor == null)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < activeTackleRunners.Count; i++)
+        {
+            var runner = activeTackleRunners[i];
+            if (runner == null || runner.actor == null)
+            {
+                continue;
+            }
+
+            if (Vector3.Distance(runner.actor.position, runningBack.actor.position) <= radius)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    void PlayRunningBackFallDown(TeamRunner runningBack, float fallDownHoldDuration)
+    {
+        StopRunner(runningBack);
+        SetAnimatorPlayback(runningBack, true);
+
+        var point = new MotionPoint
+        {
+            pointAnimationType = PointAnimationType.FallDown,
+            animationHoldDuration = Mathf.Max(0f, fallDownHoldDuration),
+            stopPathAfterAction = true
+        };
+
+        StartCoroutine(PlayPointAnimation(runningBack, point, _ => { }));
+    }
+
+    void StopBranchRoutines()
+    {
+        for (var i = 0; i < activeBranchRoutines.Count; i++)
+        {
+            if (activeBranchRoutines[i] != null)
+            {
+                StopCoroutine(activeBranchRoutines[i]);
+            }
+        }
+
+        activeBranchRoutines.Clear();
+        activeTackleRunners.Clear();
+    }
+
+    void SetRunnerHasBall(TeamRunner runner, bool hasBall)
+    {
+        if (runner == null)
+        {
+            return;
+        }
+
+        runner.runtimeHasBall = hasBall;
+        var driver = GetAnimationDriver(runner);
+        if (driver != null)
+        {
+            driver.SetHasBall(hasBall);
+            driver.ApplyStates();
+        }
     }
 
     IEnumerator PlayRunnerPath(TeamRunner runner)
@@ -2087,6 +2304,12 @@ public class FormationRunController : MonoBehaviour
 
     void ApplyFakeLayerWeight(TeamRunner runner, int destinationPointIndex, float segmentProgress = 0f, bool forceImmediate = false)
     {
+        if (IsRunningBackRunner(runner))
+        {
+            ApplyRunningBackFakeLayerWeight(runner, destinationPointIndex, segmentProgress, forceImmediate);
+            return;
+        }
+
         if (!IsFakeRunner(runner))
         {
             return;
@@ -2132,6 +2355,138 @@ public class FormationRunController : MonoBehaviour
         runner.animator.SetLayerWeight(fakeLayerIndex, nextWeight);
     }
 
+    void ApplyRunningBackFakeLayerWeight(TeamRunner runner, int destinationPointIndex, float segmentProgress, bool forceImmediate)
+    {
+        var fakeLayerIndex = GetFakeLayerIndex(runner);
+        if (fakeLayerIndex < 0)
+        {
+            return;
+        }
+
+        var targetWeight = GetRunningBackFakeLayerTargetWeight(runner, destinationPointIndex, segmentProgress);
+        if (forceImmediate)
+        {
+            runner.animator.SetLayerWeight(fakeLayerIndex, targetWeight);
+            return;
+        }
+
+        var currentWeight = runner.animator.GetLayerWeight(fakeLayerIndex);
+        var isDroppingAfterPoint11 = HasPassedRunningBackFakeEndPoint(runner, destinationPointIndex);
+        var changeSpeed = isDroppingAfterPoint11 ? RunningBackFakeLayerDropSpeed : FakeLayerWeightChangeSpeed;
+        var nextWeight = Mathf.MoveTowards(currentWeight, targetWeight, changeSpeed * Time.deltaTime);
+        runner.animator.SetLayerWeight(fakeLayerIndex, nextWeight);
+    }
+
+    float GetRunningBackFakeLayerTargetWeight(TeamRunner runner, int destinationPointIndex, float segmentProgress)
+    {
+        if (runner == null || runner.path == null || destinationPointIndex < 0)
+        {
+            return 0f;
+        }
+
+        var startIndex = FindPathPointNumberIndex(runner, RunningBackFakeStartPointNumber);
+        var endIndex = FindPathPointNumberIndex(runner, RunningBackFakeEndPointNumber);
+        if (startIndex < 0 || endIndex < 0 || endIndex <= startIndex)
+        {
+            return 0f;
+        }
+
+        if (destinationPointIndex <= startIndex)
+        {
+            return 0f;
+        }
+
+        if (destinationPointIndex > endIndex)
+        {
+            return 0f;
+        }
+
+        var routePosition = Mathf.Clamp(destinationPointIndex - 1 + Mathf.Clamp01(segmentProgress), startIndex, endIndex);
+        var progress = Mathf.InverseLerp(startIndex, endIndex, routePosition);
+        return Mathf.Lerp(0f, FakeLayerActiveWeight, progress);
+    }
+
+    bool HasPassedRunningBackFakeEndPoint(TeamRunner runner, int destinationPointIndex)
+    {
+        if (runner == null || runner.path == null || destinationPointIndex < 0)
+        {
+            return false;
+        }
+
+        var endIndex = FindPathPointNumberIndex(runner, RunningBackFakeEndPointNumber);
+        return endIndex >= 0 && destinationPointIndex > endIndex;
+    }
+
+    int GetFakeLayerIndex(TeamRunner runner)
+    {
+        if (runner == null)
+        {
+            return -1;
+        }
+
+        if (runner.animator == null)
+        {
+            runner.animator = runner.actor != null ? runner.actor.GetComponent<Animator>() : null;
+        }
+
+        return runner.animator != null ? runner.animator.GetLayerIndex(FakeLayerName) : -1;
+    }
+
+    int FindPathPointNumberIndex(TeamRunner runner, int pointNumber)
+    {
+        if (runner == null || runner.path == null)
+        {
+            return -1;
+        }
+
+        for (var i = 0; i < runner.path.Count; i++)
+        {
+            if (TryGetPointNumber(runner.path[i], out var candidateNumber) && candidateNumber == pointNumber)
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    static bool TryGetPointNumber(MotionPoint point, out int pointNumber)
+    {
+        pointNumber = -1;
+        if (point == null || string.IsNullOrWhiteSpace(point.pointName))
+        {
+            return false;
+        }
+
+        var openIndex = point.pointName.IndexOf('(');
+        var closeIndex = point.pointName.IndexOf(')');
+        if (openIndex < 0 || closeIndex <= openIndex + 1)
+        {
+            return false;
+        }
+
+        var numberText = point.pointName.Substring(openIndex + 1, closeIndex - openIndex - 1);
+        return int.TryParse(numberText, out pointNumber);
+    }
+
+    void SetFakeLayerWeight(TeamRunner runner, float weight, bool immediate)
+    {
+        var fakeLayerIndex = GetFakeLayerIndex(runner);
+        if (fakeLayerIndex < 0)
+        {
+            return;
+        }
+
+        var targetWeight = Mathf.Clamp01(weight);
+        var nextWeight = immediate
+            ? targetWeight
+            : Mathf.MoveTowards(
+                runner.animator.GetLayerWeight(fakeLayerIndex),
+                targetWeight,
+                FakeLayerWeightChangeSpeed * Time.deltaTime);
+        runner.animator.SetLayerWeight(fakeLayerIndex, nextWeight);
+    }
+
     static bool IsCentre2Runner(TeamRunner runner)
     {
         if (runner == null || string.IsNullOrWhiteSpace(runner.playerName))
@@ -2166,6 +2521,19 @@ public class FormationRunController : MonoBehaviour
         var name = runner.playerName.Trim();
         return name.Equals("Fake", System.StringComparison.OrdinalIgnoreCase) ||
                name.Equals("Faker", System.StringComparison.OrdinalIgnoreCase);
+    }
+
+    static bool IsRunningBackRunner(TeamRunner runner)
+    {
+        if (runner == null || string.IsNullOrWhiteSpace(runner.playerName))
+        {
+            return false;
+        }
+
+        var name = runner.playerName.Trim();
+        return name.Equals("RunnerBack", System.StringComparison.OrdinalIgnoreCase) ||
+               name.Equals("RunningBack", System.StringComparison.OrdinalIgnoreCase) ||
+               name.Equals("Running Back", System.StringComparison.OrdinalIgnoreCase);
     }
 
     static bool IsGoalRunner(TeamRunner runner)

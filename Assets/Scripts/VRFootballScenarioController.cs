@@ -85,6 +85,25 @@ public class VRFootballScenarioController : MonoBehaviour
     [SerializeField] float goalCatchHoldDuration = 1.2f;
     [SerializeField] Vector3 goalCaughtBallLocalOffset = new Vector3(0f, 1.1f, 0.35f);
 
+    [Header("Running Back Pass Choice")]
+    [SerializeField] bool enableRunningBackPassChoice = true;
+    [SerializeField] string runningBackRunnerName = "RunnerBack";
+    [SerializeField] float runningBackPassTravelTime = 0.45f;
+    [SerializeField] float runningBackPassArcHeight = 0.35f;
+    [SerializeField] Vector3 runningBackBallLocalOffset = new Vector3(-0.35f, 1f, 0.15f);
+    [SerializeField] float runningBackTackleChaseDuration = 3f;
+    [SerializeField] float runningBackTackleRadius = 0.85f;
+    [SerializeField] float runningBackFallDownHoldDuration = 1.25f;
+    [SerializeField] string[] playerRunningBackTacklers = { "Front Right", "Passer Right" };
+    [SerializeField] string[] opponentRunningBackTacklers = { "Front Right Facing", "Passer Right Facing" };
+    [SerializeField] Transform runningBackPassAreaHighlight;
+    [SerializeField] Color runningBackPassAreaColor = new Color(0f, 1f, 0.85f, 0.28f);
+    [SerializeField] Vector2 runningBackPassAreaSizeXZ = new Vector2(1.1f, 1.1f);
+    [SerializeField] float runningBackPassAreaHeight = 2.2f;
+    [SerializeField] float runningBackPassAreaYOffset = 0.05f;
+    [TextArea(2, 4)] [SerializeField] string runningBackChoiceInstruction =
+        "Choice: keep holding the triggers to fake the handoff, or release near the running back to pass it to him.";
+
     [Header("Flow")]
     [SerializeField] bool autoStartOnPlay = true;
     [SerializeField] bool disablePlayerControllerTasks;
@@ -124,6 +143,8 @@ public class VRFootballScenarioController : MonoBehaviour
     bool goalThrowDirectionAccepted;
     bool goalCatchTriggered;
     bool queuedGoalThrow;
+    bool runningBackPassChoiceActive;
+    bool runningBackPassChoiceCompleted;
     bool taskFailedEarly;
     bool lockBallAtPassOrigin;
     bool ballTossStarted;
@@ -138,6 +159,7 @@ public class VRFootballScenarioController : MonoBehaviour
     Transform caughtBallHolder;
     Transform pendingGoalCatchHoldTarget;
     Transform queuedGoalThrowHoldTarget;
+    Transform runningBackBallHolder;
     string earlyFailureMessage = string.Empty;
     Coroutine goalThrowReleaseRoutine;
     Coroutine goalCatchRoutine;
@@ -344,6 +366,11 @@ public class VRFootballScenarioController : MonoBehaviour
             HoldFootballAtGoalReceiver();
         }
 
+        if (runningBackBallHolder != null)
+        {
+            HoldFootballAtRunningBack();
+        }
+
         if (queuedGoalThrow)
         {
             MaintainQueuedGoalThrow();
@@ -366,6 +393,9 @@ public class VRFootballScenarioController : MonoBehaviour
         RestoreNormalTime();
         lockBallAtPassOrigin = true;
         caughtBallHolder = null;
+        runningBackBallHolder = null;
+        UpdateRunningBackPassAreaHighlight(false);
+        SetRunningBackFakeLayer(0f, true);
         SnapBallToPassOrigin();
 
         if (scenarioUI != null)
@@ -422,6 +452,7 @@ public class VRFootballScenarioController : MonoBehaviour
             lockBallAtPassOrigin = false;
             ballTossStarted = true;
             LaunchBallPass(catchTarget);
+            ScenarioHutHutTimer.StartGameSceneRetryTimer();
         }
 
         if (previewObjectivesDuringFormationTest)
@@ -502,6 +533,11 @@ public class VRFootballScenarioController : MonoBehaviour
         RestoreNormalTime();
         lockBallAtPassOrigin = true;
         caughtBallHolder = null;
+        runningBackBallHolder = null;
+        runningBackPassChoiceActive = false;
+        runningBackPassChoiceCompleted = false;
+        UpdateRunningBackPassAreaHighlight(false);
+        SetRunningBackFakeLayer(0f, true);
         SnapBallToPassOrigin();
 
         if (scenarioUI != null)
@@ -561,6 +597,18 @@ public class VRFootballScenarioController : MonoBehaviour
             var task = tasks[i];
             var completed = false;
             yield return RunTask(task, result => completed = result);
+            if (runningBackPassChoiceActive)
+            {
+                yield return WaitForRunningBackPassChoiceToFinish();
+                if (scenarioUI != null)
+                {
+                    scenarioUI.ShowFailure("You Failed!", "The running back was tackled. Restarting the scenario...");
+                }
+
+                yield return FailAndRestart();
+                yield break;
+            }
+
             if (!completed)
             {
                 yield return FailAndRestart();
@@ -578,6 +626,8 @@ public class VRFootballScenarioController : MonoBehaviour
         RestoreNormalTime();
         UpdateObjectiveIndicator(null, false);
         UpdateHandObjectiveIndicator(null, false);
+        UpdateRunningBackPassAreaHighlight(false);
+        SetRunningBackFakeLayer(0f);
         SetThrowTrajectoryVisible(false);
 
         if (scenarioUI != null)
@@ -608,6 +658,13 @@ public class VRFootballScenarioController : MonoBehaviour
 
         var elapsed = 0f;
         var duration = Mathf.Max(0.1f, task.taskDuration);
+        var showRunningBackPassArea = ShouldShowRunningBackChoiceInstruction(task);
+        UpdateRunningBackPassAreaHighlight(showRunningBackPassArea);
+        if (scenarioUI != null && (task.taskType != ScenarioTaskType.CatchBall || !keepCountdownVisibleUntilBallToss))
+        {
+            scenarioUI.ShowTask(task.title, GetTaskInstruction(task), GetTaskControlHint(task), duration);
+        }
+
         //yield return PauseBeforeTaskInstruction(task, duration);
         
         if (task.taskType == ScenarioTaskType.CatchBall)
@@ -617,6 +674,14 @@ public class VRFootballScenarioController : MonoBehaviour
 
         while (elapsed < duration || ShouldKeepWatchingGoalThrow(task) || ShouldWaitForGoalReceiver(task))
         {
+            UpdateRunningBackPassAreaHighlight(showRunningBackPassArea && !runningBackPassChoiceActive);
+            if (runningBackPassChoiceActive)
+            {
+                UpdateRunningBackPassAreaHighlight(false);
+                onComplete?.Invoke(true);
+                yield break;
+            }
+
             var waitingForGoalReceiver = ShouldWaitForGoalReceiver(task);
             var remaining = Mathf.Max(duration - elapsed, GetGoalThrowWatchRemaining(task));
             var shouldShowTaskUi = task.taskType != ScenarioTaskType.CatchBall || !keepCountdownVisibleUntilBallToss || ballTossStarted;
@@ -656,6 +721,8 @@ public class VRFootballScenarioController : MonoBehaviour
         }
 
         RestoreNormalTime();
+        UpdateRunningBackPassAreaHighlight(false);
+        SetRunningBackFakeLayer(0f);
         if (scenarioUI != null)
         {
             scenarioUI.ShowFailure("You Failed!", GetFailureMessage(task));
@@ -711,7 +778,9 @@ public class VRFootballScenarioController : MonoBehaviour
         RestoreNormalTime();
         UpdateObjectiveIndicator(null, false);
         UpdateHandObjectiveIndicator(null, false);
+        UpdateRunningBackPassAreaHighlight(false);
         SetThrowTrajectoryVisible(false);
+        ScenarioHutHutTimer.StartGameSceneRetryTimer();
 
         yield return new WaitForSecondsRealtime(failureScreenDuration);
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
@@ -947,6 +1016,15 @@ public class VRFootballScenarioController : MonoBehaviour
         activeSelectingInteractor = args.interactorObject;
         selectedBallHand = ResolveHandForInteractor(args.interactorObject);
         SnapFootballToSelectingHand(args.interactorObject);
+
+        if (currentTaskIndex >= 0 &&
+            currentTaskIndex < tasks.Count &&
+            tasks[currentTaskIndex].taskType == ScenarioTaskType.CatchBall &&
+            scenarioUI != null)
+        {
+            scenarioUI.HideCountdown();
+            scenarioUI.HideTask();
+        }
     }
 
     void SnapFootballToSelectingHand(IXRSelectInteractor interactor)
@@ -1398,6 +1476,12 @@ public class VRFootballScenarioController : MonoBehaviour
         autoCaughtUsingTrigger = false;
         hasPreviousAutoCatchHandPositions = false;
 
+        if (TryStartRunningBackPassChoice(releasedFromHand))
+        {
+            ResetAutoCatchVelocityTracking();
+            return;
+        }
+
         var isGoalThrowTask = currentTaskIndex >= 0 &&
                               currentTaskIndex < tasks.Count &&
                               tasks[currentTaskIndex].taskType == ScenarioTaskType.ThrowBallToTarget;
@@ -1456,6 +1540,312 @@ public class VRFootballScenarioController : MonoBehaviour
         return false;
     }
 
+    string GetTaskInstruction(ScenarioTask task)
+    {
+        if (task == null)
+        {
+            return string.Empty;
+        }
+
+        if (!ShouldShowRunningBackChoiceInstruction(task))
+        {
+            return task.instruction;
+        }
+
+        return task.instruction + "\n\n" + runningBackChoiceInstruction;
+    }
+
+    string GetTaskControlHint(ScenarioTask task)
+    {
+        if (task == null)
+        {
+            return string.Empty;
+        }
+
+        if (!ShouldShowRunningBackChoiceInstruction(task))
+        {
+            return task.controlHint;
+        }
+
+        return task.controlHint + "\nRelease both triggers near the running back to pass. Keep holding to continue the fake.";
+    }
+
+    bool ShouldShowRunningBackChoiceInstruction(ScenarioTask task)
+    {
+        if (!enableRunningBackPassChoice || task == null || task.taskType == ScenarioTaskType.ThrowBallToTarget)
+        {
+            return false;
+        }
+
+        var text = (task.title + " " + task.instruction).ToLowerInvariant();
+        return text.Contains("runner back") || text.Contains("running back");
+    }
+
+    void SetRunningBackFakeLayer(float weight, bool immediate = false)
+    {
+        if (formationController == null || string.IsNullOrWhiteSpace(runningBackRunnerName))
+        {
+            return;
+        }
+
+        formationController.SetPlayerRunnerFakeLayerWeight(runningBackRunnerName, weight, immediate);
+    }
+
+    void UpdateRunningBackPassAreaHighlight(bool visible)
+    {
+        if (!visible || !enableRunningBackPassChoice || formationController == null)
+        {
+            SetRunningBackPassAreaVisible(false);
+            return;
+        }
+
+        var runningBack = formationController.FindAnyRunnerActor(runningBackRunnerName);
+        if (runningBack == null)
+        {
+            SetRunningBackPassAreaVisible(false);
+            return;
+        }
+
+        EnsureRunningBackPassAreaHighlight();
+        if (runningBackPassAreaHighlight == null)
+        {
+            return;
+        }
+
+        var size = GetRunningBackPassAreaSize();
+        runningBackPassAreaHighlight.position = GetRunningBackPassAreaCenter(runningBack, size);
+        runningBackPassAreaHighlight.rotation = Quaternion.identity;
+        runningBackPassAreaHighlight.localScale = size;
+        SetRunningBackPassAreaVisible(true);
+    }
+
+    Vector3 GetRunningBackPassAreaSize()
+    {
+        return new Vector3(
+            Mathf.Max(0.05f, runningBackPassAreaSizeXZ.x),
+            Mathf.Max(0.05f, runningBackPassAreaHeight),
+            Mathf.Max(0.05f, runningBackPassAreaSizeXZ.y));
+    }
+
+    Vector3 GetRunningBackPassAreaCenter(Transform runningBack, Vector3 size)
+    {
+        return runningBack.position + Vector3.up * (runningBackPassAreaYOffset + size.y * 0.5f);
+    }
+
+    void EnsureRunningBackPassAreaHighlight()
+    {
+        if (runningBackPassAreaHighlight != null)
+        {
+            return;
+        }
+
+        var existing = transform.Find("Running Back Pass Area Highlight");
+        if (existing != null)
+        {
+            runningBackPassAreaHighlight = existing;
+            return;
+        }
+
+        var highlightObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        highlightObject.name = "Running Back Pass Area Highlight";
+        highlightObject.transform.SetParent(transform, false);
+
+        var collider = highlightObject.GetComponent<Collider>();
+        if (collider != null)
+        {
+            Destroy(collider);
+        }
+
+        var renderer = highlightObject.GetComponent<MeshRenderer>();
+        if (renderer != null)
+        {
+            renderer.sharedMaterial = CreateRunningBackPassAreaMaterial();
+        }
+
+        runningBackPassAreaHighlight = highlightObject.transform;
+        runningBackPassAreaHighlight.gameObject.SetActive(false);
+    }
+
+    Material CreateRunningBackPassAreaMaterial()
+    {
+        var shader = Shader.Find("Universal Render Pipeline/Unlit");
+        if (shader == null)
+        {
+            shader = Shader.Find("Unlit/Transparent");
+        }
+
+        if (shader == null)
+        {
+            shader = Shader.Find("Sprites/Default");
+        }
+
+        if (shader == null)
+        {
+            shader = Shader.Find("Standard");
+        }
+
+        var material = new Material(shader);
+        material.color = runningBackPassAreaColor;
+        material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+
+        if (material.HasProperty("_BaseColor"))
+        {
+            material.SetColor("_BaseColor", runningBackPassAreaColor);
+        }
+
+        if (material.HasProperty("_Surface"))
+        {
+            material.SetFloat("_Surface", 1f);
+        }
+
+        if (material.HasProperty("_SrcBlend"))
+        {
+            material.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        }
+
+        if (material.HasProperty("_DstBlend"))
+        {
+            material.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        }
+
+        if (material.HasProperty("_ZWrite"))
+        {
+            material.SetFloat("_ZWrite", 0f);
+        }
+
+        if (material.HasProperty("_EmissionColor"))
+        {
+            material.EnableKeyword("_EMISSION");
+            material.SetColor("_EmissionColor", runningBackPassAreaColor * 2.5f);
+        }
+
+        material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+        return material;
+    }
+
+    void SetRunningBackPassAreaVisible(bool visible)
+    {
+        if (runningBackPassAreaHighlight != null &&
+            runningBackPassAreaHighlight.gameObject.activeSelf != visible)
+        {
+            runningBackPassAreaHighlight.gameObject.SetActive(visible);
+        }
+    }
+
+    bool TryStartRunningBackPassChoice(Transform releasedFromHand)
+    {
+        if (!enableRunningBackPassChoice ||
+            runningBackPassChoiceActive ||
+            formationController == null ||
+            football == null ||
+            currentTaskIndex < 0 ||
+            currentTaskIndex >= tasks.Count ||
+            tasks[currentTaskIndex].taskType == ScenarioTaskType.ThrowBallToTarget)
+        {
+            return false;
+        }
+
+        var runningBack = formationController.FindAnyRunnerActor(runningBackRunnerName);
+        if (runningBack == null)
+        {
+            return false;
+        }
+
+        var releaseReference = releasedFromHand != null ? releasedFromHand : football.transform;
+        if (!IsInsideRunningBackPassArea(releaseReference.position, runningBack))
+        {
+            return false;
+        }
+
+        StartCoroutine(RunningBackPassChoiceRoutine(runningBack));
+        return true;
+    }
+
+    bool IsInsideRunningBackPassArea(Vector3 position, Transform runningBack)
+    {
+        if (runningBack == null)
+        {
+            return false;
+        }
+
+        var size = GetRunningBackPassAreaSize();
+        var center = GetRunningBackPassAreaCenter(runningBack, size);
+        var halfSize = size * 0.5f;
+        var delta = position - center;
+        return Mathf.Abs(delta.x) <= halfSize.x &&
+               Mathf.Abs(delta.y) <= halfSize.y &&
+               Mathf.Abs(delta.z) <= halfSize.z;
+    }
+
+    IEnumerator RunningBackPassChoiceRoutine(Transform runningBack)
+    {
+        runningBackPassChoiceActive = true;
+        runningBackPassChoiceCompleted = false;
+        runningBackBallHolder = null;
+        UpdateRunningBackPassAreaHighlight(false);
+        caughtBallHolder = null;
+        queuedGoalThrow = false;
+        goalThrowLaunched = false;
+        goalThrowCompleted = false;
+        isGuidingGoalThrow = false;
+        isPassingBall = true;
+
+        var start = football.transform.position;
+        SetFootballTransformAndBody(start, true, true);
+        var duration = Mathf.Max(0.05f, runningBackPassTravelTime);
+        var elapsed = 0f;
+
+        while (elapsed < duration && runningBack != null)
+        {
+            var t = Mathf.Clamp01(elapsed / duration);
+            var eased = Mathf.SmoothStep(0f, 1f, t);
+            var end = GetRunningBackBallHoldPosition(runningBack);
+            var position = Vector3.Lerp(start, end, eased);
+            position.y += Mathf.Sin(eased * Mathf.PI) * runningBackPassArcHeight;
+            football.transform.position = position;
+            football.transform.rotation = GetScriptedBallRotationForThrow();
+
+            if (footballBody != null)
+            {
+                footballBody.position = position;
+                footballBody.rotation = football.transform.rotation;
+                footballBody.linearVelocity = Vector3.zero;
+                footballBody.angularVelocity = Vector3.zero;
+            }
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        formationController.SetPlayerRunnerHasBall(runningBackRunnerName, true);
+        runningBackBallHolder = runningBack;
+        HoldFootballAtRunningBack();
+        isPassingBall = false;
+
+        formationController.StartRunningBackTackleBranch(
+            runningBackRunnerName,
+            playerRunningBackTacklers,
+            opponentRunningBackTacklers,
+            runningBackTackleChaseDuration,
+            runningBackTackleRadius,
+            runningBackFallDownHoldDuration);
+
+        yield return new WaitForSeconds(Mathf.Max(0.1f, runningBackTackleChaseDuration + runningBackFallDownHoldDuration));
+        runningBackPassChoiceCompleted = true;
+        UpdateRunningBackPassAreaHighlight(false);
+        SetRunningBackFakeLayer(0f);
+    }
+
+    IEnumerator WaitForRunningBackPassChoiceToFinish()
+    {
+        while (runningBackPassChoiceActive && !runningBackPassChoiceCompleted)
+        {
+            yield return null;
+        }
+
+        runningBackPassChoiceActive = false;
+    }
+
     static bool IsSameInteractor(IXRSelectInteractor interactor, XRBaseInteractor baseInteractor)
     {
         return interactor != null && baseInteractor != null && ReferenceEquals(interactor, (IXRSelectInteractor)baseInteractor);
@@ -1509,6 +1899,7 @@ public class VRFootballScenarioController : MonoBehaviour
         }
 
         LaunchBallPass(catchTarget);
+        ScenarioHutHutTimer.StartGameSceneRetryTimer();
         yield return null;
     }
 
@@ -1593,7 +1984,14 @@ public class VRFootballScenarioController : MonoBehaviour
             return;
         }
 
-        var shouldHoldRotation = isPassingBall || goalThrowLaunched || queuedGoalThrow || caughtBallHolder != null || lockBallAtPassOrigin || ballHeldByUser;
+        var shouldHoldRotation =
+            isPassingBall ||
+            goalThrowLaunched ||
+            queuedGoalThrow ||
+            caughtBallHolder != null ||
+            runningBackBallHolder != null ||
+            lockBallAtPassOrigin ||
+            ballHeldByUser;
         if (!shouldHoldRotation)
         {
             return;
@@ -1894,7 +2292,8 @@ public class VRFootballScenarioController : MonoBehaviour
         var directionDot = Vector3.Dot(normalizedThrowDirection, normalizedTargetDirection);
         if (directionDot < throwDirectionAcceptanceDot)
         {
-            BeginGoalThrowWatch(task);
+            goalThrowDirectionAccepted = false;
+            goalThrowWatchUntilTime = 0f;
             ResetAutoCatchVelocityTracking();
             return;
         }
@@ -2348,6 +2747,25 @@ public class VRFootballScenarioController : MonoBehaviour
             ? holdTarget.TransformPoint(goalCaughtBallLocalOffset)
             : holdTarget.position;
         SetFootballTransformAndBody(targetPosition, true, true);
+    }
+
+    Vector3 GetRunningBackBallHoldPosition(Transform runningBack)
+    {
+        return runningBack != null
+            ? runningBack.TransformPoint(runningBackBallLocalOffset)
+            : football != null
+                ? football.transform.position
+                : Vector3.zero;
+    }
+
+    void HoldFootballAtRunningBack()
+    {
+        if (football == null || runningBackBallHolder == null)
+        {
+            return;
+        }
+
+        SetFootballTransformAndBody(GetRunningBackBallHoldPosition(runningBackBallHolder), true, true);
     }
 
     void CompleteGoalThrow(bool stopBall)
