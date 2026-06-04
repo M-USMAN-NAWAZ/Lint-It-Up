@@ -8,6 +8,9 @@ using System;
 [ExecuteAlways]
 public class Game1QuestionnaireUI : MonoBehaviour
 {
+    public const string FirstQuestionAnswerKey = "Game1.Question1.AnswerText";
+    public const string SecondQuestionAnswerKey = "Game1.Question2.AnswerText";
+
     [System.Serializable]
     struct QuestionStep
     {
@@ -115,6 +118,7 @@ public class Game1QuestionnaireUI : MonoBehaviour
         }
 
         ScenarioHutHutTimer.StartTimer(scenarioTimeoutSeconds, game1SceneName, nextSceneName);
+        ClearSavedAnswers();
         EnsureAudioSource();
         ResolveOrbitCamera();
         StartPlayClock();
@@ -460,17 +464,47 @@ public class Game1QuestionnaireUI : MonoBehaviour
 
     void OnOptionASelected()
     {
+        SaveSelectedAnswer(GetCurrentOptionText(optionALabel, questions[currentQuestionIndex].optionA));
         AdvanceQuestionnaire();
     }
 
     void OnOptionBSelected()
     {
+        SaveSelectedAnswer(GetCurrentOptionText(optionBLabel, questions[currentQuestionIndex].optionB));
         AdvanceQuestionnaire();
     }
 
     void OnOptionCSelected()
     {
+        SaveSelectedAnswer(GetCurrentOptionText(optionCLabel, questions[currentQuestionIndex].optionC));
         AdvanceQuestionnaire();
+    }
+
+    string GetCurrentOptionText(TMP_Text label, string fallback)
+    {
+        if (label != null && !string.IsNullOrWhiteSpace(label.text))
+        {
+            return label.text;
+        }
+
+        return string.IsNullOrWhiteSpace(fallback) ? string.Empty : fallback;
+    }
+
+    void SaveSelectedAnswer(string answerText)
+    {
+        var key = currentQuestionIndex == 0
+            ? FirstQuestionAnswerKey
+            : SecondQuestionAnswerKey;
+
+        PlayerPrefs.SetString(key, answerText);
+        PlayerPrefs.Save();
+    }
+
+    void ClearSavedAnswers()
+    {
+        PlayerPrefs.DeleteKey(FirstQuestionAnswerKey);
+        PlayerPrefs.DeleteKey(SecondQuestionAnswerKey);
+        PlayerPrefs.Save();
     }
 
     void AdvanceQuestionnaire()
