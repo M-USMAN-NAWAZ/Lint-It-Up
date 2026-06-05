@@ -107,6 +107,8 @@ public class VRFootballScenarioController : MonoBehaviour
     [Header("Flow")]
     [SerializeField] bool autoStartOnPlay = true;
     [SerializeField] bool disablePlayerControllerTasks;
+    [SerializeField] bool useAutoPointController;
+    [Min(0.1f)] [SerializeField] float autoPointCompletionSeconds = 3f;
     [SerializeField] bool startFormationFromScenario = true;
     [SerializeField] bool startPlayerTeam = true;
     [SerializeField] bool startOpponentTeam = true;
@@ -384,13 +386,39 @@ public class VRFootballScenarioController : MonoBehaviour
             return;
         }
 
-        StartCoroutine(disablePlayerControllerTasks ? RunFormationAnimationTest() : RunScenario());
+        var runFormationTest = disablePlayerControllerTasks && !useAutoPointController;
+        StartCoroutine(runFormationTest ? RunFormationAnimationTest() : RunScenario());
+    }
+
+    bool ShouldUseGameSceneRetryTimer()
+    {
+        return !disablePlayerControllerTasks || useAutoPointController;
+    }
+
+    void StartGameSceneRetryTimerIfAllowed()
+    {
+        if (ShouldUseGameSceneRetryTimer())
+        {
+            ScenarioHutHutTimer.StartGameSceneRetryTimer();
+        }
+    }
+
+    bool IsRunningBackPassChoiceEnabled()
+    {
+        return enableRunningBackPassChoice;
+    }
+
+    bool ShouldRequireAutoCatchZoneStartGesture()
+    {
+        return requireBothHandsInAutoCatchZoneToStart &&
+               (!disablePlayerControllerTasks || useAutoPointController);
     }
 
     IEnumerator RunFormationAnimationTest()
     {
         scenarioRunning = true;
         RestoreNormalTime();
+        ScenarioHutHutTimer.StopForHutHut();
         lockBallAtPassOrigin = true;
         caughtBallHolder = null;
         runningBackBallHolder = null;
@@ -452,7 +480,13 @@ public class VRFootballScenarioController : MonoBehaviour
             lockBallAtPassOrigin = false;
             ballTossStarted = true;
             LaunchBallPass(catchTarget);
-            ScenarioHutHutTimer.StartGameSceneRetryTimer();
+            StartGameSceneRetryTimerIfAllowed();
+
+            if (ShouldAutoRunRunningBackPassChoiceInFormationTest())
+            {
+                yield return RunFormationTestRunningBackPassChoice(catchTarget);
+                yield break;
+            }
         }
 
         if (previewObjectivesDuringFormationTest)
@@ -469,6 +503,43 @@ public class VRFootballScenarioController : MonoBehaviour
         UpdateObjectiveIndicator(null, false);
 
         scenarioRunning = false;
+    }
+
+    bool ShouldAutoRunRunningBackPassChoiceInFormationTest()
+    {
+        return IsRunningBackPassChoiceEnabled() &&
+               formationController != null &&
+               formationController.FindAnyRunnerActor(runningBackRunnerName) != null;
+    }
+
+    IEnumerator RunFormationTestRunningBackPassChoice(Transform catchTarget)
+    {
+        var catchWait = Mathf.Max(0.05f, passTravelTime);
+        yield return new WaitForSecondsRealtime(catchWait);
+
+        if (catchTarget != null)
+        {
+            SetFootballTransformAndBody(catchTarget.position, true, true);
+        }
+
+        isPassingBall = false;
+
+        var runningBack = formationController != null ? formationController.FindAnyRunnerActor(runningBackRunnerName) : null;
+        if (runningBack == null)
+        {
+            scenarioRunning = false;
+            yield break;
+        }
+
+        yield return RunningBackPassChoiceRoutine(runningBack);
+        yield return WaitForRunningBackPassChoiceToFinish();
+
+        if (scenarioUI != null)
+        {
+            scenarioUI.ShowFailure("You Failed!", "The running back was tackled. Restarting the scenario...");
+        }
+
+        yield return FailAndRestart();
     }
 
     IEnumerator PreviewFormationTestObjectives()
@@ -656,8 +727,15 @@ public class VRFootballScenarioController : MonoBehaviour
         UpdateHandObjectiveIndicator(GetHandIndicatorTarget(task), true);
         UpdateThrowTrajectoryLine();
 
+        var autoControlledTask = ShouldUseAutoPointTaskController(task);
+        if (autoControlledTask)
+        {
+            TeleportUserToTask(task);
+        }
+
         var elapsed = 0f;
-        var duration = Mathf.Max(0.1f, task.taskDuration);
+        var duration = GetTaskDuration(task, autoControlledTask);
+        var startedTaskWithRequiredBallState = !task.requireBallInHand || ballHeldByUser;
         var showRunningBackPassArea = ShouldShowRunningBackChoiceInstruction(task);
         UpdateRunningBackPassAreaHighlight(showRunningBackPassArea);
         if (scenarioUI != null && (task.taskType != ScenarioTaskType.CatchBall || !keepCountdownVisibleUntilBallToss))
@@ -690,7 +768,7 @@ public class VRFootballScenarioController : MonoBehaviour
                 scenarioUI.UpdateTaskTimer(remaining);
             }
 
-            if (EvaluateTask(task))
+            if (EvaluateTask(task, elapsed, duration, autoControlledTask, startedTaskWithRequiredBallState))
             {
                 //yield return PauseAfterTaskCompletion(task);
 
@@ -720,6 +798,21 @@ public class VRFootballScenarioController : MonoBehaviour
             yield return null;
         }
 
+        if (autoControlledTask && !taskFailedEarly && elapsed >= duration)
+        {
+            if (scenarioUI != null)
+            {
+                scenarioUI.HideTask();
+            }
+
+            UpdateObjectiveIndicator(GetNextObjectiveTarget(), true);
+            UpdateHandObjectiveIndicator(GetNextHandIndicatorTarget(), true);
+            UpdateThrowTrajectoryLine();
+
+            onComplete?.Invoke(true);
+            yield break;
+        }
+
         RestoreNormalTime();
         UpdateRunningBackPassAreaHighlight(false);
         SetRunningBackFakeLayer(0f);
@@ -733,13 +826,19 @@ public class VRFootballScenarioController : MonoBehaviour
         onComplete?.Invoke(false);
     }
 
-    bool EvaluateTask(ScenarioTask task)
+    bool EvaluateTask(ScenarioTask task, float elapsed, float duration, bool autoControlledTask, bool startedTaskWithRequiredBallState)
     {
         if (task.requireBallInHand &&
             task.taskType != ScenarioTaskType.ThrowBallToTarget &&
-            !ballHeldByUser)
+            !ballHeldByUser &&
+            !(autoControlledTask && startedTaskWithRequiredBallState))
         {
             return false;
+        }
+
+        if (autoControlledTask)
+        {
+            return elapsed >= duration;
         }
 
         switch (task.taskType)
@@ -751,12 +850,12 @@ public class VRFootballScenarioController : MonoBehaviour
                 return DistanceToTarget(userRoot, task.target) <= task.completionRadius;
 
             case ScenarioTaskType.ReachWithHand:
-                if (DistanceToTarget(leftHand, task.target) <= task.completionRadius)
+                if (DistanceToTarget(leftHand, task.target, ShouldIgnoreYAxisForHandTask(task)) <= task.completionRadius)
                 {
                     return true;
                 }
 
-                if (DistanceToTarget(rightHand, task.target) <= task.completionRadius)
+                if (DistanceToTarget(rightHand, task.target, ShouldIgnoreYAxisForHandTask(task)) <= task.completionRadius)
                 {
                     return true;
                 }
@@ -780,7 +879,7 @@ public class VRFootballScenarioController : MonoBehaviour
         UpdateHandObjectiveIndicator(null, false);
         UpdateRunningBackPassAreaHighlight(false);
         SetThrowTrajectoryVisible(false);
-        ScenarioHutHutTimer.StartGameSceneRetryTimer();
+        StartGameSceneRetryTimerIfAllowed();
 
         yield return new WaitForSecondsRealtime(failureScreenDuration);
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
@@ -1364,7 +1463,7 @@ public class VRFootballScenarioController : MonoBehaviour
 
     IEnumerator WaitForStartGestureInAutoCatchZone()
     {
-        if (!requireBothHandsInAutoCatchZoneToStart || autoCatchZone == null)
+        if (!ShouldRequireAutoCatchZoneStartGesture() || autoCatchZone == null)
         {
             yield break;
         }
@@ -1374,6 +1473,8 @@ public class VRFootballScenarioController : MonoBehaviour
         {
             yield return null;
         }
+
+        ScenarioHutHutTimer.StopForHutHut();
     }
 
     bool AreBothHandsReadyToStart()
@@ -1540,6 +1641,58 @@ public class VRFootballScenarioController : MonoBehaviour
         return false;
     }
 
+    float GetTaskDuration(ScenarioTask task, bool autoControlledTask)
+    {
+        if (autoControlledTask)
+        {
+            return Mathf.Max(0.1f, autoPointCompletionSeconds);
+        }
+
+        return Mathf.Max(0.1f, task != null ? task.taskDuration : 0.1f);
+    }
+
+    bool ShouldUseAutoPointTaskController(ScenarioTask task)
+    {
+        return useAutoPointController &&
+               task != null &&
+               (task.taskType == ScenarioTaskType.ReachZone ||
+                (task.taskType == ScenarioTaskType.ReachWithHand && IsRunningBackFakeTask(task)));
+    }
+
+    bool ShouldIgnoreYAxisForHandTask(ScenarioTask task)
+    {
+        return useAutoPointController &&
+               task != null &&
+               task.taskType == ScenarioTaskType.ReachWithHand &&
+               IsRunningBackFakeTask(task);
+    }
+
+    bool IsRunningBackFakeTask(ScenarioTask task)
+    {
+        if (task == null)
+        {
+            return false;
+        }
+
+        var combinedText = (task.title + " " + task.instruction).ToLowerInvariant();
+        return combinedText.Contains("fake") &&
+               (combinedText.Contains("runner back") ||
+                combinedText.Contains("running back") ||
+                combinedText.Contains("faker"));
+    }
+
+    void TeleportUserToTask(ScenarioTask task)
+    {
+        if (task == null || userRoot == null || task.target == null)
+        {
+            return;
+        }
+
+        var currentPosition = userRoot.position;
+        var targetPosition = task.target.position;
+        userRoot.position = new Vector3(targetPosition.x, currentPosition.y, targetPosition.z);
+    }
+
     string GetTaskInstruction(ScenarioTask task)
     {
         if (task == null)
@@ -1572,7 +1725,7 @@ public class VRFootballScenarioController : MonoBehaviour
 
     bool ShouldShowRunningBackChoiceInstruction(ScenarioTask task)
     {
-        if (!enableRunningBackPassChoice || task == null || task.taskType == ScenarioTaskType.ThrowBallToTarget)
+        if (!IsRunningBackPassChoiceEnabled() || task == null || task.taskType == ScenarioTaskType.ThrowBallToTarget)
         {
             return false;
         }
@@ -1593,7 +1746,7 @@ public class VRFootballScenarioController : MonoBehaviour
 
     void UpdateRunningBackPassAreaHighlight(bool visible)
     {
-        if (!visible || !enableRunningBackPassChoice || formationController == null)
+        if (!visible || !IsRunningBackPassChoiceEnabled() || formationController == null)
         {
             SetRunningBackPassAreaVisible(false);
             return;
@@ -1734,7 +1887,7 @@ public class VRFootballScenarioController : MonoBehaviour
 
     bool TryStartRunningBackPassChoice(Transform releasedFromHand)
     {
-        if (!enableRunningBackPassChoice ||
+        if (!IsRunningBackPassChoiceEnabled() ||
             runningBackPassChoiceActive ||
             formationController == null ||
             football == null ||
@@ -1899,7 +2052,7 @@ public class VRFootballScenarioController : MonoBehaviour
         }
 
         LaunchBallPass(catchTarget);
-        ScenarioHutHutTimer.StartGameSceneRetryTimer();
+        StartGameSceneRetryTimerIfAllowed();
         yield return null;
     }
 
@@ -2871,14 +3024,22 @@ public class VRFootballScenarioController : MonoBehaviour
         }
     }
 
-    float DistanceToTarget(Transform source, Transform target)
+    float DistanceToTarget(Transform source, Transform target, bool ignoreYAxis = false)
     {
         if (source == null || target == null)
         {
             return float.MaxValue;
         }
 
-        return Vector3.Distance(source.position, target.position);
+        var sourcePosition = source.position;
+        var targetPosition = target.position;
+        if (ignoreYAxis)
+        {
+            sourcePosition.y = 0f;
+            targetPosition.y = 0f;
+        }
+
+        return Vector3.Distance(sourcePosition, targetPosition);
     }
 
     void OnDrawGizmosSelected()

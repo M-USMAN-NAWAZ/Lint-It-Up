@@ -439,15 +439,15 @@ MonoBehaviour:
   questions:
   - prompt: What do you see?
     context: 
-    optionA: 'Option A: SS in the box - Showing Cover 1'
-    optionB: 'Option B: 5 Down & Possible Blitzer'
-    optionC: 'Option C: Ben to provide'
+    optionA: 'Option A: Single-high Safety - Showing Cover 1 Man'
+    optionB: 'Option B: 8 Man Box - Blitz Alert'
+    optionC: 'Option C: Alert Defensive adjustment with TE motion'
     voiceClip: {fileID: 8300000, guid: b5988e8c6989bff42be7901bfe5b6717, type: 3}
   - prompt: What might they be giving us?
     context: 
-    optionA: 'Option A: Run'
-    optionB: 'Option B: TE Release'
-    optionC: 'Option C: Ben to provide'
+    optionA: 'Option A: Run Blitz'
+    optionB: 'Option B: Match-up Zone'
+    optionC: 'Option C: Cover 1 Man'
     voiceClip: {fileID: 8300000, guid: c22697534708b6348a5b976f2ce8064d, type: 3}
 --- !u!114 &4158822
 MonoBehaviour:
@@ -94986,6 +94986,8 @@ MonoBehaviour:
     or release near the running back to pass it to him.'
   autoStartOnPlay: 1
   disablePlayerControllerTasks: 0
+  useAutoPointController: 0
+  autoPointCompletionSeconds: 3
   startFormationFromScenario: 1
   startPlayerTeam: 1
   startOpponentTeam: 1
