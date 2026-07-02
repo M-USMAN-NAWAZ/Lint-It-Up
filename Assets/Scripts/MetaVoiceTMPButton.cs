@@ -1,13 +1,21 @@
 using Meta.WitAi;
 using Meta.WitAi.Configuration;
+using Meta.WitAi.Json;
 using Meta.WitAi.Requests;
 using System.Collections;
+using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class MetaVoiceTMPButton : MonoBehaviour
 {
+    const string DefaultRecognizedQuestion =
+        "How might New England adjust to our 2 Tight Ends Trips set, and how should we counter?";
+    const string DefaultRecognizedAnswer =
+        "Based on analysis if this year's games, New England will most certainly expect run, especially if you execute run early. If they are suspecting pass, they may show cover 1, and then settle back into cover 2. If they do this, look for the running back on a flare, or release him on a wheel route.";
+    const string DefaultUnrecognizedQuestionText = "This AI feature is coming soon";
+
     [Header("Voice")]
     [SerializeField] VoiceService voiceService;
     [SerializeField] bool activateImmediately = true;
@@ -27,8 +35,19 @@ public class MetaVoiceTMPButton : MonoBehaviour
     [Min(0f)] [SerializeField] float hideDelayAfterRecognitionSeconds = 5f;
     [Min(0.01f)] [SerializeField] float fadeDurationSeconds = 0.45f;
 
+    [Header("Question Response")]
+    [TextArea(2, 4)] [SerializeField] string recognizedQuestion =
+        DefaultRecognizedQuestion;
+    [TextArea(4, 8)] [SerializeField] string recognizedAnswer =
+        DefaultRecognizedAnswer;
+    [SerializeField] string unrecognizedQuestionText = DefaultUnrecognizedQuestionText;
+    [SerializeField] bool answerFromPartialTranscription = true;
+    [SerializeField] bool logVoiceTranscriptions;
+
     VoiceServiceRequest activeRequest;
     bool isListening;
+    bool answerShownForCurrentRequest;
+    string latestTranscription = string.Empty;
     Color transcriptionBaseColor = Color.white;
     Coroutine hideRoutine;
 
@@ -64,6 +83,7 @@ public class MetaVoiceTMPButton : MonoBehaviour
             voiceService.VoiceEvents.OnStoppedListening.AddListener(OnStoppedListening);
             voiceService.VoiceEvents.OnPartialTranscription.AddListener(OnPartialTranscription);
             voiceService.VoiceEvents.OnFullTranscription.AddListener(OnFullTranscription);
+            voiceService.VoiceEvents.OnResponse.AddListener(OnVoiceResponse);
             voiceService.VoiceEvents.OnError.AddListener(OnVoiceError);
             voiceService.VoiceEvents.OnComplete.AddListener(OnVoiceComplete);
         }
@@ -84,6 +104,7 @@ public class MetaVoiceTMPButton : MonoBehaviour
             voiceService.VoiceEvents.OnStoppedListening.RemoveListener(OnStoppedListening);
             voiceService.VoiceEvents.OnPartialTranscription.RemoveListener(OnPartialTranscription);
             voiceService.VoiceEvents.OnFullTranscription.RemoveListener(OnFullTranscription);
+            voiceService.VoiceEvents.OnResponse.RemoveListener(OnVoiceResponse);
             voiceService.VoiceEvents.OnError.RemoveListener(OnVoiceError);
             voiceService.VoiceEvents.OnComplete.RemoveListener(OnVoiceComplete);
         }
@@ -181,6 +202,8 @@ public class MetaVoiceTMPButton : MonoBehaviour
     void OnStartListening()
     {
         isListening = true;
+        answerShownForCurrentRequest = false;
+        latestTranscription = string.Empty;
         ShowTranscriptionText();
         SetOutputText(listeningText);
         RefreshButtonState();
@@ -196,6 +219,13 @@ public class MetaVoiceTMPButton : MonoBehaviour
 
     void OnPartialTranscription(string transcription)
     {
+        latestTranscription = transcription;
+        LogTranscription("Partial", transcription);
+        if (answerFromPartialTranscription && TryShowRecognizedAnswer(transcription))
+        {
+            return;
+        }
+
         if (showPartialTranscription)
         {
             SetOutputText(transcription);
@@ -204,7 +234,27 @@ public class MetaVoiceTMPButton : MonoBehaviour
 
     void OnFullTranscription(string transcription)
     {
-        SetOutputText(transcription);
+        latestTranscription = transcription;
+        LogTranscription("Full", transcription);
+        if (TryShowRecognizedAnswer(transcription))
+        {
+            return;
+        }
+
+        ShowUnrecognizedQuestionText();
+    }
+
+    void OnVoiceResponse(WitResponseNode response)
+    {
+        var transcription = response?.GetTranscription();
+        if (string.IsNullOrWhiteSpace(transcription))
+        {
+            return;
+        }
+
+        latestTranscription = transcription;
+        LogTranscription("Response", transcription);
+        TryShowRecognizedAnswer(transcription);
     }
 
     void OnVoiceError(string status, string error)
@@ -219,6 +269,11 @@ public class MetaVoiceTMPButton : MonoBehaviour
 
     void OnVoiceComplete(VoiceServiceRequest request)
     {
+        if (!TryShowRecognizedAnswer(latestTranscription) && !string.IsNullOrWhiteSpace(latestTranscription))
+        {
+            ShowUnrecognizedQuestionText();
+        }
+
         if (transcriptionText != null && transcriptionText.text == listeningText)
         {
             SetOutputText(idleText);
@@ -322,5 +377,110 @@ public class MetaVoiceTMPButton : MonoBehaviour
         var color = transcriptionBaseColor;
         color.a = Mathf.Clamp01(alpha);
         transcriptionText.color = color;
+    }
+
+    bool TryShowRecognizedAnswer(string transcription)
+    {
+        if (answerShownForCurrentRequest)
+        {
+            return true;
+        }
+
+        if (!IsRecognizedQuestion(transcription))
+        {
+            return false;
+        }
+
+        answerShownForCurrentRequest = true;
+        SetOutputText(GetRecognizedAnswer());
+        return true;
+    }
+
+    bool IsRecognizedQuestion(string transcription)
+    {
+        var normalizedTranscription = NormalizeRecognitionText(transcription);
+        var normalizedQuestion = NormalizeRecognitionText(GetRecognizedQuestion());
+
+        if (string.IsNullOrWhiteSpace(normalizedTranscription) || string.IsNullOrWhiteSpace(normalizedQuestion))
+        {
+            return false;
+        }
+
+        if (normalizedTranscription == normalizedQuestion || normalizedTranscription.Contains(normalizedQuestion))
+        {
+            return true;
+        }
+
+        var mentionsNewEngland = normalizedTranscription.Contains("new england");
+        var mentionsTrips = normalizedTranscription.Contains("trips") || normalizedTranscription.Contains("trip set");
+        var mentionsTightEnds =
+            normalizedTranscription.Contains("tight end") ||
+            normalizedTranscription.Contains("2 tight") ||
+            normalizedTranscription.Contains("two tight");
+        var asksForAdjustmentOrCounter =
+            normalizedTranscription.Contains("adjust") ||
+            normalizedTranscription.Contains("counter") ||
+            normalizedTranscription.Contains("how should we");
+
+        return mentionsNewEngland && mentionsTrips && mentionsTightEnds && asksForAdjustmentOrCounter;
+    }
+
+    string GetRecognizedQuestion()
+    {
+        return string.IsNullOrWhiteSpace(recognizedQuestion)
+            ? DefaultRecognizedQuestion
+            : recognizedQuestion;
+    }
+
+    string GetRecognizedAnswer()
+    {
+        return string.IsNullOrWhiteSpace(recognizedAnswer)
+            ? DefaultRecognizedAnswer
+            : recognizedAnswer;
+    }
+
+    void ShowUnrecognizedQuestionText()
+    {
+        SetOutputText(string.IsNullOrWhiteSpace(unrecognizedQuestionText)
+            ? DefaultUnrecognizedQuestionText
+            : unrecognizedQuestionText);
+    }
+
+    void LogTranscription(string phase, string transcription)
+    {
+        if (!logVoiceTranscriptions)
+        {
+            return;
+        }
+
+        Debug.Log($"[MetaVoiceTMPButton] {phase} transcription: {transcription}", this);
+    }
+
+    static string NormalizeRecognitionText(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var builder = new StringBuilder(value.Length);
+        var lastWasSpace = true;
+        for (var i = 0; i < value.Length; i++)
+        {
+            var character = char.ToLowerInvariant(value[i]);
+            if (char.IsLetterOrDigit(character))
+            {
+                builder.Append(character);
+                lastWasSpace = false;
+            }
+            else if (!lastWasSpace)
+            {
+                builder.Append(' ');
+                lastWasSpace = true;
+            }
+        }
+
+        var normalized = builder.ToString().Trim();
+        return (" " + normalized + " ").Replace(" two ", " 2 ").Trim();
     }
 }

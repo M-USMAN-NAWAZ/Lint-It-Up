@@ -95455,7 +95455,7 @@ MonoBehaviour:
   autoStartOnPlay: 1
   disablePlayerControllerTasks: 0
   useAutoPointController: 1
-  autoPointCompletionSeconds: 3
+  autoPointCompletionSeconds: 2.3
   startFormationFromScenario: 1
   startPlayerTeam: 1
   startOpponentTeam: 1
