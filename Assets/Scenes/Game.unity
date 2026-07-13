@@ -11284,11 +11284,6 @@ Transform:
   - {fileID: 1156715241}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!4 &139452549 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 1852576806548013000, guid: 0f254147f6881f749992c47cda088bde, type: 3}
-  m_PrefabInstance: {fileID: 604073190}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &139496393 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -6297854906677940197, guid: 79f8be8f2107c9c4194270674d9e7b12, type: 3}
@@ -31554,6 +31549,18 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: d639ce391f4f45e4ab8cbc83c97a4f39, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1910561962}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: d639ce391f4f45e4ab8cbc83c97a4f39, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 696784697}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: d639ce391f4f45e4ab8cbc83c97a4f39, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1702537021}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: d639ce391f4f45e4ab8cbc83c97a4f39, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1239209152}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: d639ce391f4f45e4ab8cbc83c97a4f39, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1129824452}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d639ce391f4f45e4ab8cbc83c97a4f39, type: 3}
 --- !u!4 &600918388 stripped
@@ -31749,10 +31756,7 @@ PrefabInstance:
     m_RemovedComponents:
     - {fileID: 5866666021909216657, guid: 0f254147f6881f749992c47cda088bde, type: 3}
     m_RemovedGameObjects: []
-    m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 1852576806548013000, guid: 0f254147f6881f749992c47cda088bde, type: 3}
-      insertIndex: 0
-      addedObject: {fileID: 965508052}
+    m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0f254147f6881f749992c47cda088bde, type: 3}
 --- !u!4 &604073191 stripped
@@ -36854,6 +36858,59 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5671141517340671163, guid: 09f8324518cb49c43acf8293883a49f5, type: 3}
   m_PrefabInstance: {fileID: 693111796}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &696784696
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 696784697}
+  - component: {fileID: 696784698}
+  m_Layer: 0
+  m_Name: SideWall
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &696784697
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 696784696}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -35.8, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 600918388}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &696784698
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 696784696}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 18.767262, z: 243.19785}
+  m_Center: {x: 0, y: 3.0808606, z: 31.751465}
 --- !u!1001 &697791502
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -53768,12 +53825,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 965508051}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.48528105, y: -0.50275475, z: 0.49723002, w: -0.51429784}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 3, y: 3, z: 3}
+  m_LocalRotation: {x: 0.6189716, y: -0.04394629, z: 0.7813818, w: -0.06622272}
+  m_LocalPosition: {x: -0.00014, y: 0.00149, z: 0.00047}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
-  m_Father: {fileID: 139452549}
+  m_Father: {fileID: 1794687999}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &965508053
 MeshRenderer:
@@ -61156,6 +61213,59 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5671141517340671163, guid: 09f8324518cb49c43acf8293883a49f5, type: 3}
   m_PrefabInstance: {fileID: 1119438146}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1129824451
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1129824452}
+  - component: {fileID: 1129824453}
+  m_Layer: 0
+  m_Name: SideWall (3)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1129824452
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1129824451}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0.70710576, z: -0, w: 0.7071079}
+  m_LocalPosition: {x: 69.151474, y: 0, z: -48.8}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 600918388}
+  m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
+--- !u!65 &1129824453
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1129824451}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 18.767262, z: 243.19785}
+  m_Center: {x: 0, y: 3.0808606, z: 31.751465}
 --- !u!1001 &1130462696
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -66382,6 +66492,59 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1070084049}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1239209151
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1239209152}
+  - component: {fileID: 1239209153}
+  m_Layer: 0
+  m_Name: SideWall (2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1239209152
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1239209151}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0.70710576, z: -0, w: 0.7071079}
+  m_LocalPosition: {x: 69.151474, y: 0, z: 66.7}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 600918388}
+  m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
+--- !u!65 &1239209153
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1239209151}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 18.767262, z: 243.19785}
+  m_Center: {x: 0, y: 3.0808606, z: 31.751465}
 --- !u!1001 &1240017164
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -76011,7 +76174,7 @@ Transform:
   m_GameObject: {fileID: 1479991701}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.031, y: 1.2, z: 15.03}
+  m_LocalPosition: {x: -1.693, y: 1.2, z: 14.637}
   m_LocalScale: {x: 3, y: 3, z: 3}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -85098,6 +85261,59 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5671141517340671163, guid: 09f8324518cb49c43acf8293883a49f5, type: 3}
   m_PrefabInstance: {fileID: 929224882}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1702537020
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1702537021}
+  - component: {fileID: 1702537022}
+  m_Layer: 0
+  m_Name: SideWall (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1702537021
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1702537020}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 37.4, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 600918388}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &1702537022
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1702537020}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 18.767262, z: 243.19785}
+  m_Center: {x: 0, y: 3.0808606, z: 31.751465}
 --- !u!1001 &1702856869
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -90059,12 +90275,20 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 2412161367050800168, guid: 7bbead5a1457819409231524bccc54e9, type: 3}
+      insertIndex: 0
+      addedObject: {fileID: 965508052}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7bbead5a1457819409231524bccc54e9, type: 3}
 --- !u!4 &1794687998 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 7bbead5a1457819409231524bccc54e9, type: 3}
+  m_PrefabInstance: {fileID: 1794687997}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1794687999 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2412161367050800168, guid: 7bbead5a1457819409231524bccc54e9, type: 3}
   m_PrefabInstance: {fileID: 1794687997}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &1796834718
@@ -95430,6 +95654,7 @@ MonoBehaviour:
   goalCatchAnimationLeadDistance: 2.75
   goalCatchBallSnapDelay: 0.12
   goalCatchHoldDuration: 1.2
+  parentBallToGoalCatchPoint: 1
   goalCaughtBallLocalOffset: {x: 0, y: 1.1, z: 0.35}
   enableRunningBackPassChoice: 1
   runningBackRunnerName: RunnerBack
@@ -95450,12 +95675,10 @@ MonoBehaviour:
   runningBackPassAreaSizeXZ: {x: 0.8, y: 0.8}
   runningBackPassAreaHeight: 0.8
   runningBackPassAreaYOffset: 0.05
-  runningBackChoiceInstruction: 'Choice: keep holding the triggers to fake the handoff,
-    or release near the running back to pass it to him.'
+  runningBackChoiceInstruction: 
   autoStartOnPlay: 1
   disablePlayerControllerTasks: 0
   useAutoPointController: 1
-  autoPointCompletionSeconds: 2.3
   startFormationFromScenario: 1
   startPlayerTeam: 1
   startOpponentTeam: 1
@@ -95473,7 +95696,7 @@ MonoBehaviour:
   resumeHint: Press the Resume button to continue.
   winSceneName: Theater
   winScreenDuration: 3
-  winTitle: You Win!
+  winTitle: TOUCHDOWN
   winDescription: Play complete. Moving to the theater...
   tasks:
   - title: Catch The Ball
@@ -95485,6 +95708,7 @@ MonoBehaviour:
     completionRadius: 1
     taskDuration: 2
     requireBallInHand: 0
+    autoPointCompletionSeconds: 1.5
   - title: Run To Runner Back
     instruction: Turn arround and run toward the Runner Back next.
     controlHint: Use your controllers to complete the task.
@@ -95493,6 +95717,7 @@ MonoBehaviour:
     completionRadius: 1
     taskDuration: 3
     requireBallInHand: 1
+    autoPointCompletionSeconds: 1.5
   - title: Fake To Runner Back
     instruction: Stretch your arm toward the indicaion.
     controlHint: Use your controllers to complete the task.
@@ -95501,6 +95726,7 @@ MonoBehaviour:
     completionRadius: 1
     taskDuration: 2
     requireBallInHand: 1
+    autoPointCompletionSeconds: 3
   - title: Run To Safe Spot
     instruction: Run to a safer place before throwing.
     controlHint: Use your controllers to complete the task.
@@ -95509,6 +95735,7 @@ MonoBehaviour:
     completionRadius: 1.1
     taskDuration: 1
     requireBallInHand: 1
+    autoPointCompletionSeconds: 1.2
   - title: Throw To Goal
     instruction: Throw the ball to the goal player.
     controlHint: Use your controllers to complete the task.
@@ -95517,6 +95744,7 @@ MonoBehaviour:
     completionRadius: 5
     taskDuration: 3
     requireBallInHand: 1
+    autoPointCompletionSeconds: 0.1
 --- !u!4 &1942520623
 Transform:
   m_ObjectHideFlags: 0
